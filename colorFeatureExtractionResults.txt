@@ -1,0 +1,95 @@
+===Normal output
+    heavy_blue_beans =     6,799,669.0R,     5,765,278.0G,     6,534,024.0B
+    light_blue_beans =     2,401,569.0R,     1,949,732.0G,     2,713,466.0B
+  medium_brown_glass =     6,681,892.0R,     5,353,384.0G,     5,538,041.0B
+   heavy_green_glass =     7,303,112.0R,     6,372,624.0G,     6,410,028.0B
+  medium_green_glass =     5,995,449.0R,     5,214,402.0G,     5,218,642.0B
+    light_brown_rice =     3,179,507.0R,     2,183,986.0G,     2,230,932.0B
+    heavy_green_rice =     6,618,738.0R,     5,775,877.0G,     5,741,152.0B
+  medium_blue_screws =     5,402,338.0R,     4,533,612.0G,     5,104,459.0B
+  heavy_brown_screws =     6,441,265.0R,     5,291,850.0G,     5,467,032.0B
+  light_green_screws =     5,747,315.0R,     4,915,324.0G,     4,997,711.0B
+
+==output of red only
+    heavy_blue_beans =     6,738,895.0R,     6,738,895.0G,     6,738,895.0B
+    light_blue_beans =     2,709,792.0R,     2,709,792.0G,     2,709,792.0B
+  medium_brown_glass =     6,647,983.0R,     6,647,983.0G,     6,647,983.0B
+   heavy_green_glass =     7,083,321.0R,     7,083,321.0G,     7,083,321.0B
+  medium_green_glass =     5,793,002.0R,     5,793,002.0G,     5,793,002.0B
+    light_brown_rice =     3,163,359.0R,     3,163,359.0G,     3,163,359.0B
+    heavy_green_rice =     6,743,318.0R,     6,743,318.0G,     6,743,318.0B
+  medium_blue_screws =     5,726,166.0R,     5,726,166.0G,     5,726,166.0B
+  heavy_brown_screws =     7,093,964.0R,     7,093,964.0G,     7,093,964.0B
+  light_green_screws =     6,116,474.0R,     6,116,474.0G,     6,116,474.0B
+
+==output using 640x480 bins
+    heavy_blue_beans =            22.0R,            18.0G,            21.0B
+    light_blue_beans =             8.0R,             7.0G,             9.0B
+  medium_brown_glass =            20.0R,            16.0G,            17.0B
+   heavy_green_glass =            22.0R,            19.0G,            19.0B
+  medium_green_glass =            20.0R,            17.0G,            17.0B
+    light_brown_rice =             9.0R,             6.0G,             6.0B
+    heavy_green_rice =            21.0R,            18.0G,            18.0B
+  medium_blue_screws =            18.0R,            15.0G,            17.0B
+  heavy_brown_screws =            21.0R,            17.0G,            18.0B
+  light_green_screws =            19.0R,            16.0G,            17.0B
+
+===output using 640x480 bins only using the first execution
+    heavy_blue_beans =             3.0R,             2.0G,             3.0B
+    light_blue_beans =             2.0R,             1.0G,             2.0B
+  medium_brown_glass =             2.0R,             1.0G,             1.0B
+   heavy_green_glass =             2.0R,             1.0G,             1.0B
+  medium_green_glass =             2.0R,             2.0G,             2.0B
+    light_brown_rice =             2.0R,             1.0G,             1.0B
+    heavy_green_rice =             2.0R,             1.0G,             1.0B
+  medium_blue_screws =             2.0R,             1.0G,             2.0B
+  heavy_brown_screws =             2.0R,             1.0G,             1.0B
+  light_green_screws =             2.0R,             1.0G,             1.0B
+
+===output using only the first execution
+    heavy_blue_beans =       864,784.0R,       740,641.0G,       892,710.0B
+    light_blue_beans =       774,189.0R,       606,421.0G,       791,708.0B
+  medium_brown_glass =       748,012.0R,       554,751.0G,       556,424.0B
+   heavy_green_glass =       649,302.0R,       583,103.0G,       542,907.0B
+  medium_green_glass =       667,222.0R,       606,922.0G,       567,203.0B
+    light_brown_rice =       841,167.0R,       547,927.0G,       583,992.0B
+    heavy_green_rice =       637,951.0R,       584,068.0G,       521,833.0B
+  medium_blue_screws =       604,880.0R,       509,008.0G,       605,718.0B
+  heavy_brown_screws =       800,688.0R,       651,849.0G,       653,105.0B
+  light_green_screws =       655,844.0R,       570,214.0G,       553,023.0B
+
+==output only the first execution changing background model to train only on look no_object
+    heavy_blue_beans =     9,064,250.0R,     8,314,716.0G,     8,704,698.0B
+    light_blue_beans =     2.0834702E7R,      1.858461E7G,     1.9644876E7B
+  medium_brown_glass =     1.4854003E7R,     1.3572578E7G,      1.391187E7B
+   heavy_green_glass =     8,358,870.0R,     7,714,666.0G,     7,828,644.0B
+  medium_green_glass =     1.4919001E7R,     1.3849759E7G,     1.4096458E7B
+    light_brown_rice =     1.6351002E7R,     1.4216781E7G,     1.4897322E7B
+    heavy_green_rice =     9,620,445.0R,     8,898,961.0G,     9,014,106.0B
+  medium_blue_screws =     1.4065267E7R,     1.2989137E7G,     1.3437671E7B
+  heavy_brown_screws =     8,552,807.0R,     7,783,720.0G,     7,957,178.0B
+  light_green_screws =     1.4187721E7R,     1.3123895E7G,     1.3403516E7B
+
+===output only the first image background model only use look no_object
+    heavy_blue_beans =     1,975,881.0R,     1,780,087.0G,     1,874,786.0B
+    light_blue_beans =     2,072,085.0R,     1,876,855.0G,     1,985,670.0B
+  medium_brown_glass =     2,288,169.0R,     2,045,355.0G,     2,105,580.0B
+   heavy_green_glass =     2,398,964.0R,     2,180,903.0G,     2,236,020.0B
+  medium_green_glass =     2,137,873.0R,     1,948,008.0G,     1,986,590.0B
+    light_brown_rice =     2,308,375.0R,     2,059,523.0G,     2,115,015.0B
+    heavy_green_rice =     2,502,087.0R,     2,264,566.0G,     2,326,516.0B
+  medium_blue_screws =     2,252,182.0R,     2,037,825.0G,     2,143,220.0B
+  heavy_brown_screws =     1,828,946.0R,     1,626,458.0G,     1,681,444.0B
+  light_green_screws =     2,338,823.0R,     2,125,241.0G,     2,177,806.0B
+
+===output only the first image background model only use look no_object, 10E10D
+    heavy_blue_beans =     4,238,093.0R,     3,912,954.0G,     4,047,314.0B
+    light_blue_beans =     3,833,084.0R,     3,533,672.0G,     3,677,958.0B
+  medium_brown_glass =     2,562,211.0R,     2,298,273.0G,     2,367,366.0B
+   heavy_green_glass =     2,135,207.0R,     1,932,542.0G,     1,984,555.0B
+  medium_green_glass =     3,388,515.0R,     3,133,664.0G,     3,192,725.0B
+    light_brown_rice =     3,027,100.0R,     2,712,575.0G,     2,791,250.0B
+    heavy_green_rice =     2,129,687.0R,     1,936,006.0G,     1,980,956.0B
+  medium_blue_screws =     2,739,236.0R,     2,469,269.0G,     2,596,437.0B
+  heavy_brown_screws =     1,855,321.0R,     1,654,909.0G,     1,709,678.0B
+  light_green_screws =     1,757,280.0R,     1,589,517.0G,     1,628,284.0B
