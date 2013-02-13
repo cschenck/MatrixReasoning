@@ -2,6 +2,7 @@ package matrices.patterns;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -33,12 +34,12 @@ public class OneSameOneDifferentPattern implements Pattern {
 		boolean same = false;
 		boolean different = false;
 		
-		for(MatrixEntry obj1 : objects)
+		for(int i = 0; i < objects.size(); i++)
 		{
-			for(MatrixEntry obj2 : objects)
+			MatrixEntry obj1 = objects.get(i);
+			for(int j = i + 1; j < objects.size(); j++)
 			{
-				if(obj1.equals(obj2))
-					continue;
+				MatrixEntry obj2 = objects.get(j);
 				
 				if(obj1.getPropertyValue(property).equals(obj2.getPropertyValue(property)))
 					same = true;
@@ -50,7 +51,6 @@ public class OneSameOneDifferentPattern implements Pattern {
 		return same && different;
 	}
 
-	@Override
 	public List<MatrixEntry> align(List<MatrixEntry> toAlign, Set<MatrixEntry> objectPool) {
 		throw new UnsupportedOperationException("OneSameOneDifferent pattern does not align objects");
 	}
@@ -61,7 +61,6 @@ public class OneSameOneDifferentPattern implements Pattern {
 		return "OneSameOneDifferent:" + property;
 	}
 	
-	@Override
 	public List<MatrixEntry> disalign(List<MatrixEntry> toAlter, Set<MatrixEntry> objectPool) {
 		
 		List<MatrixEntry> ret = new ArrayList<MatrixEntry>(toAlter);
@@ -90,6 +89,13 @@ public class OneSameOneDifferentPattern implements Pattern {
 		
 		return ret;
 		
+	}
+	
+	@Override
+	public Set<String> getRelavantProperties() {
+		Set<String> ret = new HashSet<String>();
+		ret.add(this.property);
+		return ret;
 	}
 
 }

@@ -19,11 +19,14 @@ import matrices.MatrixGenerator;
 import matrices.patterns.DecrementPattern;
 import matrices.patterns.DifferentPattern;
 import matrices.patterns.IncrementPattern;
+import matrices.patterns.ORMetaPattern;
 import matrices.patterns.OneSameOneDifferentPattern;
 import matrices.patterns.Pattern;
 import matrices.patterns.SamePattern;
+import matrices.patterns.XORMetaPattern;
 import taskSolver.ScoredChangeSolver;
 import taskSolver.TaskSolver;
+import taskSolver.comparisonFunctions.CheatingComparator;
 import taskSolver.comparisonFunctions.ComparisonFunction;
 import taskSolver.comparisonFunctions.DistanceComparator.DistanceFunction;
 import taskSolver.comparisonFunctions.DistanceComparatorLogisticsNormalization;
@@ -198,7 +201,7 @@ public class ScoredChangeExp {
 	{
 		comparators = new ArrayList<ComparisonFunction>();
 		
-		 /*
+		// /*
 		//cheating comparators for testing purposes
 		comparators.add(new CheatingComparator("weight", ORDERED_PROPERTIES.get("weight")));
 		comparators.add(new CheatingComparator("color"));
@@ -225,10 +228,10 @@ public class ScoredChangeExp {
 		if(objects == null)
 			throw new IllegalStateException("The matrix completion tasks cannot be initialized until after the objects are initialized");
 		
+		Set<Matrix> matrices = MatrixGenerator.generateMatrix(objects, rowPatterns, colPatterns, validPatterns, NUM_TASKS, rand);
 		tasks = new ArrayList<MatrixCompletionTask>();
-		for(int i = 0; i < NUM_TASKS; i++)
+		for(Matrix m : matrices)
 		{
-			Matrix m = MatrixGenerator.generateMatrix(objects, rowPatterns, colPatterns, validPatterns, rand);
 			List<MatrixEntry> choices = new ArrayList<MatrixEntry>();
 			choices.add(m.getEntry(m.getNumRows() - 1, m.getNumCols() - 1));
 			while(choices.size() < NUM_CHOICES)
@@ -255,7 +258,6 @@ public class ScoredChangeExp {
 		{
 			Pattern sp = new SamePattern(property, rand);
 			Pattern osod = new OneSameOneDifferentPattern(property, rand);
-			
 			rowPatterns.add(sp); rowPatterns.add(osod);
 			colPatterns.add(sp); colPatterns.add(osod);
 			validPatterns.put(sp, true); validPatterns.put(osod, false);
@@ -264,17 +266,18 @@ public class ScoredChangeExp {
 			{
 				Pattern inc = new IncrementPattern(property, ORDERED_PROPERTIES.get(property), rand);
 				Pattern dec = new DecrementPattern(property, ORDERED_PROPERTIES.get(property), rand);
-				Pattern dp = new DifferentPattern(property, new HashSet<MatrixEntry>(objects), rand);
+				Pattern xor = new XORMetaPattern(new DifferentPattern(property, new HashSet<MatrixEntry>(objects), rand), 
+						new ORMetaPattern(dec, inc));
 				
-				rowPatterns.add(inc); rowPatterns.add(dec); rowPatterns.add(dp);
-				colPatterns.add(inc); colPatterns.add(dec); colPatterns.add(dp);
-				validPatterns.put(inc, true); validPatterns.put(dec, true); validPatterns.put(dp, false); 
+				rowPatterns.add(inc); rowPatterns.add(dec); rowPatterns.add(xor);
+				colPatterns.add(inc); colPatterns.add(dec); colPatterns.add(xor);
+				validPatterns.put(inc, true); validPatterns.put(dec, true); validPatterns.put(xor, false); 
 			}
 			else
 			{
 				Pattern dp = new DifferentPattern(property, new HashSet<MatrixEntry>(objects), rand);
-				rowPatterns.add(dp);
-				colPatterns.add(dp);
+				rowPatterns.add(dp); 
+				colPatterns.add(dp); 
 				validPatterns.put(dp, true); 
 			}
 			

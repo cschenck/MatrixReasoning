@@ -1,6 +1,7 @@
 package matrices.patterns;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -29,12 +30,10 @@ public class DecrementPattern implements Pattern {
 		return wrapped.detectPattern(objects);
 	}
 
-	@Override
 	public List<MatrixEntry> align(List<MatrixEntry> toAlign, Set<MatrixEntry> objectPool) {
 		return wrapped.align(toAlign, objectPool);
 	}
 
-	@Override
 	public List<MatrixEntry> disalign(List<MatrixEntry> toAlter, Set<MatrixEntry> objectPool) {
 		return wrapped.disalign(toAlter, objectPool);
 	}
@@ -43,6 +42,13 @@ public class DecrementPattern implements Pattern {
 	public String toString()
 	{
 		return "DecrementPattern:" + this.property;
+	}
+	
+	@Override
+	public Set<String> getRelavantProperties() {
+		Set<String> ret = new HashSet<String>();
+		ret.add(this.property);
+		return ret;
 	}
 
 }

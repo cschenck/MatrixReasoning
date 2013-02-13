@@ -336,4 +336,20 @@ public class Utility {
 		return ret;
 	}
 	
+	public static <T> Set<T> intersection(Set<T> ... sets)
+	{
+		Set<T> ret = new HashSet<T>();
+		for(T t : sets[0])
+		{
+			ret.add(t);
+			for(Set<T> set : sets)
+			{
+				if(!set.contains(t))
+					ret.remove(t);
+			}
+		}
+		
+		return ret;
+	}
+	
 }

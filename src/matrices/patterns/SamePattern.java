@@ -2,6 +2,7 @@ package matrices.patterns;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -40,7 +41,6 @@ public class SamePattern implements Pattern {
 		return true;
 	}
 
-	@Override
 	public List<MatrixEntry> align(List<MatrixEntry> toAlign, Set<MatrixEntry> objectPool) {
 		String value = toAlign.get(rand.nextInt(toAlign.size())).getPropertyValue(property);
 		
@@ -69,7 +69,6 @@ public class SamePattern implements Pattern {
 		return "Same:" + property;
 	}
 
-	@Override
 	public List<MatrixEntry> disalign(List<MatrixEntry> toAlter, Set<MatrixEntry> objectPool) {
 		
 		List<MatrixEntry> ret = new ArrayList<MatrixEntry>(toAlter);
@@ -98,6 +97,13 @@ public class SamePattern implements Pattern {
 		
 		return ret;
 		
+	}
+
+	@Override
+	public Set<String> getRelavantProperties() {
+		Set<String> ret = new HashSet<String>();
+		ret.add(this.property);
+		return ret;
 	}
 
 }

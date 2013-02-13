@@ -51,7 +51,6 @@ public class DifferentPattern implements Pattern {
 		return true;
 	}
 
-	@Override
 	public List<MatrixEntry> align(List<MatrixEntry> toAlign, Set<MatrixEntry> objectPool) {
 		
 		//if there are more object to align than there are values for this property, throw an exception
@@ -91,7 +90,6 @@ public class DifferentPattern implements Pattern {
 		return "Different:" + property;
 	}
 	
-	@Override
 	public List<MatrixEntry> disalign(List<MatrixEntry> toAlter, Set<MatrixEntry> objectPool) {
 		
 		List<MatrixEntry> ret = new ArrayList<MatrixEntry>(toAlter);
@@ -120,6 +118,13 @@ public class DifferentPattern implements Pattern {
 		
 		return ret;
 		
+	}
+	
+	@Override
+	public Set<String> getRelavantProperties() {
+		Set<String> ret = new HashSet<String>();
+		ret.add(this.property);
+		return ret;
 	}
 
 }

@@ -23,12 +23,15 @@ import matrices.MatrixGenerator;
 import matrices.patterns.DecrementPattern;
 import matrices.patterns.DifferentPattern;
 import matrices.patterns.IncrementPattern;
+import matrices.patterns.ORMetaPattern;
 import matrices.patterns.OneSameOneDifferentPattern;
 import matrices.patterns.Pattern;
 import matrices.patterns.SamePattern;
+import matrices.patterns.XORMetaPattern;
 import utility.MultiThreadRunner;
 import utility.MultiThreadRunner.MultiThreadRunnable;
 import utility.Utility;
+import experiment.scoredChangeExps.ScoredChangeExp;
 import featureExtraction.backgroundSubtraction.BackgroundSubtraction;
 
 public class Main {
@@ -55,7 +58,7 @@ public class Main {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws IOException {
-		loadObjectsFile();
+//		loadObjectsFile();
 //		testBackgroundSubtraction();
 		
 //		MatrixCompletionExperiment exp = new MatrixCompletionExperiment(objectsFile);
@@ -65,8 +68,8 @@ public class Main {
 //		MatrixCompletionExperimentClassificationDiff exp = new MatrixCompletionExperimentClassificationDiff(objectsFile);
 //		MatrixCompletionExperimentClassificationDiffAdaBoost exp = new MatrixCompletionExperimentClassificationDiffAdaBoost(objectsFile);
 //		PatternClassificationExp exp = new PatternClassificationExp(objectsFile);
-//		ScoredChangeExp exp = new ScoredChangeExp(objectsFile);
-//		exp.runExperiment(logFile);
+		ScoredChangeExp exp = new ScoredChangeExp(objectsFile);
+		exp.runExperiment(logFile);
 	}
 	
 	private static void loadObjectsFile() throws FileNotFoundException
@@ -86,16 +89,7 @@ public class Main {
 		intializePatterns(objects.get(0).getDefinedProperties(), new HashSet<MatrixEntry>(objects),
 				rand, rowPatterns, colPatterns, validPatterns);
 		
-		List<Matrix> matrices = new ArrayList<Matrix>();
-		for(int i = 0; i < 50; i++)
-		{
-			Matrix m = null;
-			do
-			{	
-				m = MatrixGenerator.generateMatrix(objects, rowPatterns, colPatterns, validPatterns, rand);
-			} while (matrices.contains(m));
-			matrices.add(m);
-		}
+		List<Matrix> matrices = new ArrayList<Matrix>(MatrixGenerator.generateMatrix(objects, rowPatterns, colPatterns, validPatterns, 50, rand));
 		
 		Map<Class<? extends Pattern>, Integer> counts = new HashMap<Class<? extends Pattern>, Integer>();
 		for(Pattern p : rowPatterns)
@@ -158,7 +152,6 @@ public class Main {
 		{
 			Pattern sp = new SamePattern(property, rand);
 			Pattern osod = new OneSameOneDifferentPattern(property, rand);
-			
 			rowPatterns.add(sp); rowPatterns.add(osod);
 			colPatterns.add(sp); colPatterns.add(osod);
 			validPatterns.put(sp, true); validPatterns.put(osod, false);
@@ -167,17 +160,18 @@ public class Main {
 			{
 				Pattern inc = new IncrementPattern(property, ORDERED_PROPERTIES.get(property), rand);
 				Pattern dec = new DecrementPattern(property, ORDERED_PROPERTIES.get(property), rand);
-				Pattern dp = new DifferentPattern(property, new HashSet<MatrixEntry>(objects), rand);
+				Pattern xor = new XORMetaPattern(new DifferentPattern(property, new HashSet<MatrixEntry>(objects), rand), 
+						new ORMetaPattern(dec, inc));
 				
-				rowPatterns.add(inc); rowPatterns.add(dec); rowPatterns.add(dp);
-				colPatterns.add(inc); colPatterns.add(dec); colPatterns.add(dp);
-				validPatterns.put(inc, true); validPatterns.put(dec, true); validPatterns.put(dp, false); 
+				rowPatterns.add(inc); rowPatterns.add(dec); rowPatterns.add(xor);
+				colPatterns.add(inc); colPatterns.add(dec); colPatterns.add(xor);
+				validPatterns.put(inc, true); validPatterns.put(dec, true); validPatterns.put(xor, false); 
 			}
 			else
 			{
 				Pattern dp = new DifferentPattern(property, new HashSet<MatrixEntry>(objects), rand);
-				rowPatterns.add(dp);
-				colPatterns.add(dp);
+				rowPatterns.add(dp); 
+				colPatterns.add(dp); 
 				validPatterns.put(dp, true); 
 			}
 			
