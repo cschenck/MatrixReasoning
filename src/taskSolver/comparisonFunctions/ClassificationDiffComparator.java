@@ -23,8 +23,6 @@ import weka.core.Instances;
 
 public class ClassificationDiffComparator implements ComparisonFunction {
 	
-	private static boolean DO_FEATURE_SELECTION = true;
-	private static boolean DO_PCA = false;
 	private static double PCA_VARIANCE_COVERED = 0.95;
 	private static double FEATURE_SELECTION_GAIN_THRESHOLD = 0.075;
 
@@ -51,24 +49,32 @@ public class ClassificationDiffComparator implements ComparisonFunction {
 	
 	private AttributeSelection as;
 	private PrincipalComponents pca;
+	private boolean doFeatureSelection;
+	private boolean doPCA;
 	
 	public ClassificationDiffComparator(List<Integer> trainExecutions, int testExecution, 
-			List<MatrixEntry> objects, String property, Set<Context> contexts)
+			List<MatrixEntry> objects, String property, Set<Context> contexts, 
+			boolean doFeatureSelection, boolean doPCA)
 	{
 		this.testExecution = testExecution;
 		this.property = property;
 		this.contexts = contexts;
+		this.doFeatureSelection = doFeatureSelection;
+		this.doPCA = doPCA;
 		
 		setUpClassifier(trainExecutions, objects);
 	}
 	
 	public ClassificationDiffComparator(List<Integer> trainExecutions, int testExecution, 
-			List<MatrixEntry> objects, String property, List<String> values, Set<Context> contexts)
+			List<MatrixEntry> objects, String property, List<String> values, Set<Context> contexts, 
+			boolean doFeatureSelection, boolean doPCA)
 	{
 		this.testExecution = testExecution;
 		this.property = property;
 		this.contexts = contexts;
 		this.values = values;
+		this.doFeatureSelection = doFeatureSelection;
+		this.doPCA = doPCA;
 		
 		setUpClassifier(trainExecutions, objects);
 	}
@@ -133,7 +139,7 @@ public class ClassificationDiffComparator implements ComparisonFunction {
 		}
 		
 		//now do PCA and/or feature selection (probably shouldn't do both)
-		if(DO_PCA)
+		if(doPCA)
 		{
 			Utility.debugPrintln("computing Principal Components");
 			pca = new PrincipalComponents();
@@ -147,7 +153,7 @@ public class ClassificationDiffComparator implements ComparisonFunction {
 			Utility.debugPrintln("done computing Principal Components");
 		}
 		
-		if(DO_FEATURE_SELECTION)
+		if(doFeatureSelection)
 		{
 			Utility.debugPrintln("computing Feature Selection");
 			if(this.values == null)
@@ -218,7 +224,7 @@ public class ClassificationDiffComparator implements ComparisonFunction {
 		testData.add(dataPoint2);
 		testData.setClassIndex(this.attributes.size() - 1);
 		
-		if(DO_PCA)
+		if(doPCA)
 		{
 			try {
 //				testData = pca.transformedData(testData);
@@ -229,7 +235,7 @@ public class ClassificationDiffComparator implements ComparisonFunction {
 			}
 		}
 		
-		if(DO_FEATURE_SELECTION)
+		if(doFeatureSelection)
 		{
 			try {
 //				testData = as.reduceDimensionality(testData);

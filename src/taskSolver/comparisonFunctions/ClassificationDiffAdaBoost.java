@@ -60,7 +60,8 @@ public class ClassificationDiffAdaBoost implements ComparisonFunction {
 		{
 			Set<Context> singleContext = new HashSet<Context>();
 			singleContext.add(c);
-			this.classifiers.put(c, new ClassificationDiffComparator(trainExecutions, testExecution, objects, property, values, singleContext));
+			this.classifiers.put(c, new ClassificationDiffComparator(trainExecutions, testExecution, objects, 
+					property, values, singleContext, false, false));
 		}
 		
 		//in order to run AdaBoost, we have to give it a set of interactions and what the correct predictions for each are

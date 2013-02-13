@@ -46,6 +46,9 @@ public class ScoredChangeExpClassDiff {
 	private final static long RANDOM_SEED = 1;
 	private final static String TASK_CACHE_FILE = "cachedTasks.txt";
 	
+	private final static boolean DO_FEATURE_SELECTION  = true;
+	private final static boolean DO_PCA = true;
+	
 	private final static Map<String, List<String>> ORDERED_PROPERTIES = DEFINE_PROPERTIES(); 
 	
 	private static Map<String, List<String>> DEFINE_PROPERTIES()
@@ -229,10 +232,10 @@ public class ScoredChangeExpClassDiff {
 		{
 			if(ORDERED_PROPERTIES.containsKey(property))
 				comparators.add(new ClassificationDiffComparator(trainExecutions, testExecution, objects, 
-						property, ORDERED_PROPERTIES.get(property), this.getContexts()));
+						property, ORDERED_PROPERTIES.get(property), this.getContexts(), DO_FEATURE_SELECTION, DO_PCA));
 			else
 				comparators.add(new ClassificationDiffComparator(trainExecutions, testExecution, objects, 
-						property, this.getContexts()));
+						property, this.getContexts(), DO_FEATURE_SELECTION, DO_PCA));
 		}
 		
 		 

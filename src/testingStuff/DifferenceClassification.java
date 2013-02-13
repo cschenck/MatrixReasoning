@@ -62,7 +62,7 @@ public class DifferenceClassification {
 				if(i != testTrial)
 					trainTrials.add(i);
 			}
-			ComparisonFunction comparator = new ClassificationDiffComparator(trainTrials, testTrial, objects, property, contexts);
+			ComparisonFunction comparator = new ClassificationDiffComparator(trainTrials, testTrial, objects, property, contexts, false, false);
 //			ComparisonFunction comparator = new ClassificationDiffAdaBoost(trainTrials, testTrial, objects, property, contexts, rand);
 			
 			for(MatrixEntry obj1 : objects)
