@@ -55,35 +55,43 @@ public class ClassificationDiffAdaBoost implements ComparisonFunction {
 	{
 		Utility.debugPrintln("training classifiers");
 		this.classifiers = new HashMap<Context, ClassificationDiffComparator>();
+		//iterate over each context and make a classifications diff comparator for each
 		for(Context c : contexts)
 		{
 			Set<Context> singleContext = new HashSet<Context>();
 			singleContext.add(c);
-			this.classifiers.put(c, new ClassificationDiffComparator(trainExecutions, testExecution, objects, property, singleContext));
+			this.classifiers.put(c, new ClassificationDiffComparator(trainExecutions, testExecution, objects, property, values, singleContext));
 		}
 		
+		//in order to run AdaBoost, we have to give it a set of interactions and what the correct predictions for each are
+		//one interaction is comparing a pair of trials, from different objects, 
 		Set<Interaction> interactions = new HashSet<ClassificationDiffAdaBoost.Interaction>();
 		Map<ClassificationDiffComparator, Map<Interaction, Boolean>> predictions = 
 				new HashMap<ClassificationDiffComparator, Map<Interaction,Boolean>>();
+		//iterate over every pair of trials between pairs of objects
 		for(MatrixEntry obj1 : objects)
 		{
 			for(int exec1 : trainExecutions)
 			{
 				for(MatrixEntry obj2 : objects)
 				{
-					if(obj1.equals(obj2))
+					if(obj1.equals(obj2)) //no need to compare the same object to itself
 						continue;
 					
 					for(int exec2 : trainExecutions)
 					{
+						//set up the interaction
 						Interaction interaction = new Interaction(obj1, exec1, obj2, exec2);
-						interactions.add(interaction);
+						interactions.add(interaction); //that was the easy part
+						
+						//now we need to find out if each classificationDiffComparator predicts this interaction correctly or not
 						for(ClassificationDiffComparator cdc : classifiers.values())
 						{
 							if(predictions.get(cdc) == null)
 								predictions.put(cdc, new HashMap<ClassificationDiffAdaBoost.Interaction, Boolean>());
+							//get the predicted value
 							double diff = cdc.compare(interaction.object1, interaction.execution1, interaction.object2, interaction.execution2);
-							if(this.values == null)
+							if(this.values == null) //if its predicting a categorical property, then it should only predict same or different
 							{
 								boolean equal = interaction.object1.getPropertyValue(property).equals(interaction.object2.getPropertyValue(property));
 								if((diff < 0.5 && equal) || (diff > 0.5 && !equal))
@@ -91,9 +99,17 @@ public class ClassificationDiffAdaBoost implements ComparisonFunction {
 								else
 									predictions.get(cdc).put(interaction, false);
 							}
-							else
+							else //if its predicting an ordered property, then we need to make sure it got the distance correct
 							{
-								//TODO 
+								int index1 = values.indexOf(obj1.getPropertyValue(property));
+								int index2 = values.indexOf(obj2.getPropertyValue(property));
+								int expected = index2 - index1;
+								//computing the predicted difference just undoes the adjustment done by classificationDiffComparator
+								int predicted = (int) Math.round((diff*2.0 - 1.0)*(values.size() - 1));
+								if(expected == predicted)
+									predictions.get(cdc).put(interaction, true);
+								else
+									predictions.get(cdc).put(interaction, false);
 							}
 						}
 					}
@@ -131,8 +147,17 @@ public class ClassificationDiffAdaBoost implements ComparisonFunction {
 		}
 		else
 		{
-			//TODO
-			return -1.0;
+			//weighted average
+			double mean = 0;
+			double sum = 0;
+			
+			for(Entry<ClassificationDiffComparator, Double> e : classifierWeights.entrySet())
+			{
+				mean += e.getValue()*e.getKey().compare(obj1, obj2);
+				sum += e.getValue();
+			}
+			
+			return mean/sum;
 		}
 	}
 	
