@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Scanner;
 
 import utility.Utility;
 
@@ -103,6 +104,51 @@ public class MatrixCompletionTask {
 		}
 		
 		return ret;
+	}
+	
+	public String toSerialString()
+	{
+		String ret = "";
+		ret += matrix.getNumRows() + "," + matrix.getNumCols();
+		ret += "," + (this.possibleAnswers.size());
+		
+		for(int i = 0; i < matrix.getNumRows(); i++)
+		{
+			for(int j = 0; j < matrix.getNumCols(); j++)
+				ret += "," + matrix.getEntry(i, j).getName();
+		}
+		
+		for(MatrixEntry obj : possibleAnswers)
+			ret += "," + obj.getName();
+		
+		return ret;
+	}
+	
+	public static MatrixCompletionTask constructTaskFromSerialString(String s, List<MatrixEntry> objects, Random rand)
+	{
+		Map<String, MatrixEntry> names = new HashMap<String, MatrixEntry>();
+		for(MatrixEntry obj : objects)
+			names.put(obj.getName(), obj);
+		
+		Scanner scan = new Scanner(s);
+		scan.useDelimiter(",");
+		int rows = scan.nextInt();
+		int cols = scan.nextInt();
+		int choices = scan.nextInt();
+		Matrix m = new Matrix(rows, cols);
+		for(int i = 0; i < rows; i++)
+		{
+			for(int j = 0; j < cols; j++)
+			{
+				m.setEntry(i, j, names.get(scan.next()));
+			}
+		}
+		
+		List<MatrixEntry> possibleChoices = new ArrayList<MatrixEntry>();
+		for(int i = 0; i < choices; i++)
+			possibleChoices.add(names.get(scan.next()));
+		
+		return new MatrixCompletionTask(m, m.getEntry(m.getNumRows() - 1, m.getNumCols() - 1), possibleChoices, rand);
 	}
 
 }

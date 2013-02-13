@@ -1,5 +1,6 @@
 package experiment.scoredChangeExps;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.Set;
 
 import matrices.Matrix;
@@ -40,6 +42,7 @@ public class ScoredChangeExp {
 	private final static int NUM_TASKS = 50; 
 	private final static int NUM_CHOICES = 5;
 	private final static long RANDOM_SEED = 1;
+	private final static String TASK_CACHE_FILE = "cachedTasks.txt";
 	
 	private final static Map<String, List<String>> ORDERED_PROPERTIES = DEFINE_PROPERTIES(); 
 	
@@ -228,8 +231,52 @@ public class ScoredChangeExp {
 		if(objects == null)
 			throw new IllegalStateException("The matrix completion tasks cannot be initialized until after the objects are initialized");
 		
+		if(new File(TASK_CACHE_FILE).exists())
+		{
+			tasks = loadTasksFromFile();
+		}
+		else
+		{
+			tasks = generateTasks();
+			writeTasksToFile(tasks);
+		}
+	}
+	
+	private void writeTasksToFile(List<MatrixCompletionTask> tasks)
+	{
+		try {
+			FileWriter fw = new FileWriter(new File(TASK_CACHE_FILE));
+			for(MatrixCompletionTask t : tasks)
+				fw.write(t.toSerialString()  + "\n");
+			fw.flush();
+			fw.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		
+	}
+	
+	private List<MatrixCompletionTask> loadTasksFromFile()
+	{
+		List<MatrixCompletionTask> ret = new ArrayList<MatrixCompletionTask>();
+		Scanner lines;
+		try {
+			lines = new Scanner(new File(TASK_CACHE_FILE));
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+		
+		while(lines.hasNextLine())
+		{
+			ret.add(MatrixCompletionTask.constructTaskFromSerialString(lines.nextLine(), objects, rand));
+		}
+		
+		return ret;
+	}
+
+	private List<MatrixCompletionTask> generateTasks() {
 		Set<Matrix> matrices = MatrixGenerator.generateMatrix(objects, rowPatterns, colPatterns, validPatterns, NUM_TASKS, rand);
-		tasks = new ArrayList<MatrixCompletionTask>();
+		List<MatrixCompletionTask> tasks = new ArrayList<MatrixCompletionTask>();
 		for(Matrix m : matrices)
 		{
 			List<MatrixEntry> choices = new ArrayList<MatrixEntry>();
@@ -250,6 +297,8 @@ public class ScoredChangeExp {
 			tasks.add(new MatrixCompletionTask(m, m.getEntry(m.getNumRows() - 1, m.getNumCols() - 1), choices, rand));
 			
 		}
+		
+		return tasks;
 	}
 	
 	private void intializePatterns() {
