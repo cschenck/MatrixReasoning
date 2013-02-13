@@ -7,14 +7,15 @@ import java.util.Set;
 import matrices.MatrixEntry;
 import utility.Context;
 import utility.Utility;
+import weka.attributeSelection.ASEvaluation;
 import weka.attributeSelection.AttributeSelection;
 import weka.attributeSelection.GainRatioAttributeEval;
 import weka.attributeSelection.PrincipalComponents;
 import weka.attributeSelection.Ranker;
+import weka.attributeSelection.ReliefFAttributeEval;
 import weka.classifiers.Classifier;
+import weka.classifiers.functions.SMO;
 import weka.classifiers.functions.SMOreg;
-import weka.classifiers.meta.AdaBoostM1;
-import weka.classifiers.trees.J48;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
@@ -22,18 +23,18 @@ import weka.core.Instances;
 
 public class ClassificationDiffComparator implements ComparisonFunction {
 	
-	private static boolean DO_FEATURE_SELECTION = false;
+	private static boolean DO_FEATURE_SELECTION = true;
 	private static boolean DO_PCA = false;
 	private static double PCA_VARIANCE_COVERED = 0.95;
 	private static double FEATURE_SELECTION_GAIN_THRESHOLD = 0.075;
 
 	private static Classifier instantiateClassifier()
 	{
-//		return new SMO();
+		return new SMO();
 //		return new J48();
-		AdaBoostM1 ret = new AdaBoostM1();
-		ret.setClassifier(new J48());
-		return ret;
+//		AdaBoostM1 ret = new AdaBoostM1();
+//		ret.setClassifier(new J48());
+//		return ret;
 	}
 	
 	private static Classifier instantiateRegressor()
@@ -149,8 +150,17 @@ public class ClassificationDiffComparator implements ComparisonFunction {
 		if(DO_FEATURE_SELECTION)
 		{
 			Utility.debugPrintln("computing Feature Selection");
-			as = ClassificationDiffComparator.doRankedAttributeSelection(trainData, 
-					new GainRatioAttributeEval(), FEATURE_SELECTION_GAIN_THRESHOLD);
+			if(this.values == null)
+			{
+				as = ClassificationDiffComparator.doRankedAttributeSelection(trainData, 
+						new GainRatioAttributeEval(), FEATURE_SELECTION_GAIN_THRESHOLD);
+			}
+			else
+			{
+				as = ClassificationDiffComparator.doRankedAttributeSelection(trainData, 
+						new ReliefFAttributeEval(), FEATURE_SELECTION_GAIN_THRESHOLD);
+			}
+			
 			try {
 				trainData = as.reduceDimensionality(trainData);
 			} catch (Exception e) {
@@ -194,6 +204,7 @@ public class ClassificationDiffComparator implements ComparisonFunction {
 		double[] fs1 = this.combineFeatures(obj1, exec1, contexts);
 		double[] fs2 = this.combineFeatures(obj2, exec2, contexts);
 		
+		
 		for(int i = 0; i < fs1.length; i++)
 		{
 			dataPoint1.setValue(attributes.get(i), fs1[i]);
@@ -210,7 +221,9 @@ public class ClassificationDiffComparator implements ComparisonFunction {
 		if(DO_PCA)
 		{
 			try {
-				testData = pca.transformedData(testData);
+//				testData = pca.transformedData(testData);
+				dataPoint1 = as.reduceDimensionality(dataPoint1);
+				dataPoint2 = as.reduceDimensionality(dataPoint2);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -219,7 +232,9 @@ public class ClassificationDiffComparator implements ComparisonFunction {
 		if(DO_FEATURE_SELECTION)
 		{
 			try {
-				testData = as.reduceDimensionality(testData);
+//				testData = as.reduceDimensionality(testData);
+				dataPoint1 = as.reduceDimensionality(dataPoint1);
+				dataPoint2 = as.reduceDimensionality(dataPoint2);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -259,7 +274,13 @@ public class ClassificationDiffComparator implements ComparisonFunction {
 		}
 	}
 	
-	private static AttributeSelection doRankedAttributeSelection(Instances data, GainRatioAttributeEval eval, double threshold)
+	@Override
+	public String toString()
+	{
+		return contexts.toString();
+	}
+	
+	private static AttributeSelection doRankedAttributeSelection(Instances data, ASEvaluation eval, double threshold)
 	{
             AttributeSelection attsel = new AttributeSelection();
 

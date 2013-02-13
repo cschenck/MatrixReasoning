@@ -117,6 +117,7 @@ public class ClassificationDiffAdaBoost implements ComparisonFunction {
 			}
 		}
 		
+		
 		Utility.debugPrintln("boosting weights");
 		AdaBoost<ClassificationDiffComparator, Interaction> booster =  
 				new AdaBoost<ClassificationDiffComparator, Interaction>(new ArrayList<ClassificationDiffComparator>(classifiers.values()), 
