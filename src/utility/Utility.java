@@ -9,8 +9,11 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 
@@ -348,6 +351,26 @@ public class Utility {
 					ret.remove(t);
 			}
 		}
+		
+		return ret;
+	}
+	
+	public static <T> Map<T, Double> normalize(Map<T, Double> map)
+	{
+		double min = Double.MAX_VALUE;
+		double max = -Double.MAX_VALUE;
+		
+		for(Double d : map.values())
+		{
+			if(d > max)
+				max = d;
+			if(d < min)
+				min = d;
+		}
+		
+		Map<T, Double> ret = new HashMap<T, Double>();
+		for(Entry<T, Double> e : map.entrySet())
+			ret.put(e.getKey(), (e.getValue() - min)/(max - min));
 		
 		return ret;
 	}

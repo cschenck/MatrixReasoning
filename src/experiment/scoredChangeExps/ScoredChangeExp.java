@@ -204,7 +204,7 @@ public class ScoredChangeExp {
 	{
 		comparators = new ArrayList<ComparisonFunction>();
 		
-		// /*
+		 /*
 		//cheating comparators for testing purposes
 		comparators.add(new CheatingComparator("weight", ORDERED_PROPERTIES.get("weight")));
 		comparators.add(new CheatingComparator("color"));

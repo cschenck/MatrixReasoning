@@ -61,13 +61,6 @@ public class Main {
 //		loadObjectsFile();
 //		testBackgroundSubtraction();
 		
-//		MatrixCompletionExperiment exp = new MatrixCompletionExperiment(objectsFile);
-//		MatrixCompletionExperimentClassification exp = new MatrixCompletionExperimentClassification(objectsFile);
-//		MatrixCompletionExperimentAdaBoost exp = new MatrixCompletionExperimentAdaBoost(objectsFile);
-//		MatrixCompletionExperimentGeneticAlgorithm exp = new MatrixCompletionExperimentGeneticAlgorithm(objectsFile);
-//		MatrixCompletionExperimentClassificationDiff exp = new MatrixCompletionExperimentClassificationDiff(objectsFile);
-//		MatrixCompletionExperimentClassificationDiffAdaBoost exp = new MatrixCompletionExperimentClassificationDiffAdaBoost(objectsFile);
-//		PatternClassificationExp exp = new PatternClassificationExp(objectsFile);
 		ScoredChangeExp exp = new ScoredChangeExp(objectsFile);
 		exp.runExperiment(logFile);
 	}

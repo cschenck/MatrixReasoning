@@ -9,6 +9,7 @@ import matrices.MatrixCompletionTask;
 import matrices.MatrixEntry;
 import taskSolver.comparisonFunctions.ComparisonFunction;
 import utility.RunningMean;
+import utility.Utility;
 
 public class ScoredChangeSolver implements TaskSolver {
 
@@ -53,29 +54,38 @@ public class ScoredChangeSolver implements TaskSolver {
 			colExpectedValues.put(cf, values);
 		}
 		
-		MatrixEntry bestObj = null;
-		double minValue = Double.MAX_VALUE;
-		
-		for(MatrixEntry obj : task.getChoices())
-		{
-			double dis = computeDistanceFromExpectation(task, obj, rowScores, colScores, rowExpectedValues, colExpectedValues);
-			if(dis < minValue)
-			{
-				minValue = dis;
-				bestObj = obj;
-			}
-		}
-		
 		Map<MatrixEntry, Double> ret = new HashMap<MatrixEntry, Double>();
 		for(MatrixEntry obj : task.getChoices())
 		{
-			if(obj.equals(bestObj))
-				ret.put(obj, 1.0);
-			else
-				ret.put(obj, 0.0);
+			double dis = computeDistanceFromExpectation(task, obj, rowScores, colScores, rowExpectedValues, colExpectedValues);
+			ret.put(obj, -dis);
 		}
 		
-		return ret;
+		return Utility.normalize(ret);
+		
+//		MatrixEntry bestObj = null;
+//		double minValue = Double.MAX_VALUE;
+//		
+//		for(MatrixEntry obj : task.getChoices())
+//		{
+//			double dis = computeDistanceFromExpectation(task, obj, rowScores, colScores, rowExpectedValues, colExpectedValues);
+//			if(dis < minValue)
+//			{
+//				minValue = dis;
+//				bestObj = obj;
+//			}
+//		}
+//		
+//		Map<MatrixEntry, Double> ret = new HashMap<MatrixEntry, Double>();
+//		for(MatrixEntry obj : task.getChoices())
+//		{
+//			if(obj.equals(bestObj))
+//				ret.put(obj, 1.0);
+//			else
+//				ret.put(obj, 0.0);
+//		}
+//		
+//		return ret;
 	}
 
 	private double computeDistanceFromExpectation(MatrixCompletionTask task,
