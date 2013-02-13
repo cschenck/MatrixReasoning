@@ -33,6 +33,7 @@ import utility.MultiThreadRunner.MultiThreadRunnable;
 import utility.Utility;
 import experiment.scoredChangeExps.ScoredChangeExp;
 import experiment.scoredChangeExps.ScoredChangeExpBoosting;
+import experiment.scoredChangeExps.ScoredChangeExpTaskEval;
 import featureExtraction.backgroundSubtraction.BackgroundSubtraction;
 
 public class Main {
@@ -63,7 +64,8 @@ public class Main {
 //		testBackgroundSubtraction();
 		
 //		ScoredChangeExp exp = new ScoredChangeExp(objectsFile);
-		ScoredChangeExpBoosting exp = new ScoredChangeExpBoosting(objectsFile);
+//		ScoredChangeExpBoosting exp = new ScoredChangeExpBoosting(objectsFile);
+		ScoredChangeExpTaskEval exp = new ScoredChangeExpTaskEval(objectsFile);
 		exp.runExperiment(logFile);
 	}
 	
