@@ -64,10 +64,10 @@ public class Main {
 //		loadObjectsFile();
 //		testBackgroundSubtraction();
 		
-//		ScoredChangeExp exp = new ScoredChangeExp(objectsFile);
+		ScoredChangeExp exp = new ScoredChangeExp(objectsFile);
 //		ScoredChangeExpBoosting exp = new ScoredChangeExpBoosting(objectsFile);
 //		ScoredChangeExpTaskEval exp = new ScoredChangeExpTaskEval(objectsFile);
-		ScoredChangeExpClassDiff exp = new ScoredChangeExpClassDiff(objectsFile);
+//		ScoredChangeExpClassDiff exp = new ScoredChangeExpClassDiff(objectsFile);
 		exp.runExperiment(logFile);
 	}
 	
