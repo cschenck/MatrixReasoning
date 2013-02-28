@@ -162,6 +162,31 @@ public class Utility {
 		return ret;
 	}
 	
+	public static <T> List<List<T>> createAllPermutations(Set<T> objects)
+	{
+		if(objects.size() <= 0)
+		{
+			List<T> empty = new ArrayList<T>();
+			List<List<T>> ret = new ArrayList<List<T>>();
+			ret.add(empty);
+			return ret;
+		}
+		
+		List<List<T>> ret = new ArrayList<List<T>>();
+		
+		for(T obj : objects)
+		{
+			Set<T> remaining = new HashSet<T>(objects);
+			remaining.remove(obj);
+			List<List<T>> lists = createAllPermutations(remaining);
+			for(List<T> list : lists)
+				list.add(obj);
+			ret.addAll(lists);
+		}
+		
+		return ret;
+	}
+	
 	public static <T> List<List<T>> createAllUniqueCombosOfSize(List<T> objects, int size)
 	{
 		//this is intractable when (|objects| choose size) is large

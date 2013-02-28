@@ -3,10 +3,11 @@ package taskSolver.comparisonFunctions;
 import java.util.List;
 
 import utility.Context;
+import utility.ObjectOrderer.OrderingDistanceFunction;
 import utility.RunningMean;
 import matrices.MatrixEntry;
 
-public class DistanceComparator implements ComparisonFunction {
+public class DistanceComparator implements ComparisonFunction, OrderingDistanceFunction<MatrixEntry> {
 	
 	public enum DistanceFunction {
 		Euclidean, Manhatten
@@ -96,6 +97,11 @@ public class DistanceComparator implements ComparisonFunction {
 		}
 		else
 			throw new IllegalStateException("Forgot to implement the new distance function");
+	}
+
+	@Override
+	public double distance(MatrixEntry obj1, MatrixEntry obj2) {
+		return this.compare(obj1, obj2);
 	}
 
 }
