@@ -1,6 +1,7 @@
 package testingStuff;
 
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -10,9 +11,13 @@ import java.util.Random;
 import java.util.Set;
 
 import matrices.MatrixEntry;
+import taskSolver.comparisonFunctions.ComparisonFunction;
+import taskSolver.comparisonFunctions.DistanceComparator;
+import taskSolver.comparisonFunctions.DistanceComparator.DistanceFunction;
 import utility.Behavior;
 import utility.Context;
 import utility.Modality;
+import utility.RunningMean;
 import utility.Utility;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
@@ -21,10 +26,12 @@ import weka.classifiers.lazy.KStar;
 import weka.classifiers.trees.RandomForest;
 import weka.clusterers.Clusterer;
 import weka.clusterers.SimpleKMeans;
+import weka.clusterers.XMeans;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.neighboursearch.PerformanceStats;
 import featureExtraction.ColorFeatureExtractor;
 import featureExtraction.FeatureExtractionManager;
 import featureExtraction.FeatureExtractor;
@@ -44,43 +51,70 @@ public class ColorClustering {
 		//String property = "weight";
 //		String property = "contents";
 		
-		List<MatrixEntry> objects = MatrixEntry.loadMatrixEntryFile("objects.txt");
+		final List<MatrixEntry> objects = MatrixEntry.loadMatrixEntryFile("objects.txt");
 		manager.assignFeatures(objects, contexts);
 		
 		System.out.println("building instances");
 		Instances data = buildInstances(objects, contexts);
-		SimpleKMeans clusterer = new SimpleKMeans();
-		clusterer.setNumClusters(3);
+		XMeans clusterer = new XMeans();
+		clusterer.setMaxNumClusters(4);
+		clusterer.setMinNumClusters(2);
+		final Map<Context, ComparisonFunction> comps = new HashMap<Context, ComparisonFunction>();
+		for(Context c : contexts)
+			comps.put(c, new DistanceComparator(c, DistanceFunction.Euclidean, objects));
+		clusterer.setDistanceF(new weka.core.DistanceFunction() {
+			public void setOptions(String[] arg0) throws Exception {throw new UnsupportedOperationException();}
+			public Enumeration listOptions() {throw new UnsupportedOperationException();}
+			public String[] getOptions() {throw new UnsupportedOperationException();}
+			public void update(Instance arg0) {throw new UnsupportedOperationException();}
+			public void setInvertSelection(boolean arg0) {throw new UnsupportedOperationException();}
+			public void setInstances(Instances arg0) {}
+			public void setAttributeIndices(String arg0) {throw new UnsupportedOperationException();}
+			public void postProcessDistances(double[] arg0) {throw new UnsupportedOperationException();}
+			public boolean getInvertSelection() {throw new UnsupportedOperationException();}
+			public Instances getInstances() {throw new UnsupportedOperationException();}
+			public String getAttributeIndices() {throw new UnsupportedOperationException();}
+			public double distance(Instance arg0, Instance arg1, double arg2,
+					PerformanceStats arg3) {throw new UnsupportedOperationException();}
+			public double distance(Instance arg0, Instance arg1, double arg2) {throw new UnsupportedOperationException();}
+			public double distance(Instance arg0, Instance arg1, PerformanceStats arg2)
+					throws Exception {throw new UnsupportedOperationException();}
+			
+			@Override
+			public double distance(Instance arg0, Instance arg1) {
+				MatrixEntry obj1 = objects.get((int) arg0.value(0));
+				MatrixEntry obj2 = objects.get((int) arg1.value(0));
+				RunningMean ret = new RunningMean();
+				for(Context c : getContexts())
+					ret.addValue(comps.get(c).compare(obj1, obj2));
+				return ret.getMean();
+			}
+		});
 		System.out.println("building clusterer");
 		clusterer.buildClusterer(data);
 		
-		System.out.println("clustering objects into " + clusterer.getNumClusters() + " clusters");
+		System.out.println("clustering objects into " + clusterer.getMaxNumClusters() + " clusters");
 		Map<Integer, List<MatrixEntry>> clusters = new HashMap<Integer, List<MatrixEntry>>();
-		for(int i = 0; i < clusterer.getNumClusters(); i++)
+		for(int i = 0; i < clusterer.getMaxNumClusters(); i++)
 			clusters.put(i, new ArrayList<MatrixEntry>());
 		for(MatrixEntry obj : objects)
 		{
-			int[] votes = new int[clusterer.getNumClusters()];
-			for(int i = 0; i < FeatureExtractionManager.NUM_EXECUTIONS; i++)
-			{
-				Instance dataPoint = buildInstance(obj, i, contexts);
-				votes[clusterer.clusterInstance(dataPoint)]++;
-			}
-			System.out.println(obj.getName() + " : " + Utility.convertToList(votes).toString());
-			int cluster = Utility.getMax(votes);
-			clusters.get(cluster).add(obj);
+			
+			Instance dataPoint = buildInstance(obj, objects.indexOf(obj));
+			clusters.get(clusterer.clusterInstance(dataPoint)).add(obj);
+			
+			System.out.println(obj.getName() + " : " + clusterer.clusterInstance(dataPoint));
+			
 		}
 		for(List<MatrixEntry> cluster : clusters.values())
 			System.out.println(cluster);
 		
 	}
 	
-	private static Instance buildInstance(MatrixEntry object, int exec, Set<Context> contexts)
+	private static Instance buildInstance(MatrixEntry object, int index)
 	{
-		double[] dd = combineFeatures(object, exec, contexts);
-		Instance dataPoint = new DenseInstance(dd.length);
-		for(int i = 0; i < dd.length; i++)
-			dataPoint.setValue(i, dd[i]);
+		Instance dataPoint = new DenseInstance(1);
+		dataPoint.setValue(0, index);
 		
 		return dataPoint;
 	}
@@ -89,12 +123,7 @@ public class ColorClustering {
 	{
 		
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-		double[] fs = combineFeatures(objects.get(0), 0, contexts);
-		for(int i = 1; i <= fs.length; i++)
-		{
-			Attribute attribute = new Attribute("" + i);
-			attributes.add(attribute);
-		}
+		attributes.add(new Attribute("index"));
 		
 		int capacity = FeatureExtractionManager.NUM_EXECUTIONS*objects.size();
 		
@@ -102,16 +131,10 @@ public class ColorClustering {
 		
 		for(MatrixEntry object : objects)
 		{
-			for(int exec = 0; exec < FeatureExtractionManager.NUM_EXECUTIONS; exec++)
-			{
-				double[] dd = combineFeatures(object, exec, contexts);
-				Instance dataPoint = new DenseInstance(attributes.size());
-				for(int i = 0; i < dd.length; i++)
-					dataPoint.setValue(attributes.get(i), dd[i]);
-				
-				dataPoint.setDataset(ret);
-				ret.add(dataPoint);
-			}
+			Instance dataPoint = new DenseInstance(attributes.size());
+			dataPoint.setDataset(ret);
+			dataPoint.setValue(0, objects.indexOf(object));
+			ret.add(dataPoint);
 		}
 		
 		return ret;
@@ -158,7 +181,7 @@ public class ColorClustering {
 //		contexts.add(new Context(Behavior.push, Modality.proprioception));
 //		contexts.add(new Context(Behavior.shake, Modality.proprioception));
 //		contexts.add(new Context(Behavior.tap, Modality.proprioception));
-		//color contexts
+		//color contexts	
 		contexts.add(new Context(Behavior.look, Modality.color));
 		
 		return contexts;
