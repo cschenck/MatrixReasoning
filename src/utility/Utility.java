@@ -72,6 +72,38 @@ public class Utility {
 		return new HashSet<T>(ret);
 	}
 	
+	public static int getMax(int[] list)
+	{
+		int best = 0;
+		for(int i = 0; i < list.length; i++)
+		{
+			if(list[i] > list[best])
+				best = i;
+		}
+		
+		return best;
+	}
+	
+	public static <T extends Comparable<T>> T getMax(List<T> list, Random rand)
+	{
+		T best = null;
+		for(T t : list)
+		{
+			if(best == null || t.compareTo(best) > 0)
+				best = t;
+		}
+		
+		//now we need to make sure that if there are multiple, equivalent maxes that a random one is picked
+		List<T> bestList = new ArrayList<T>();
+		for(T t : list)
+		{
+			if(t.compareTo(best) == 0)
+				bestList.add(t);
+		}
+		
+		return bestList.get(rand.nextInt(bestList.size()));
+	}
+	
 	public static <T> T getMax(List<T> list, Comparator<T> comparator, Random rand)
 	{
 		T best = null;
@@ -211,6 +243,14 @@ public class Utility {
 	{
 		List<T> ret = new ArrayList<T>();
 		for(T t : list)
+			ret.add(t);
+		return ret;
+	}
+	
+	public static List<Integer> convertToList(int[] list)
+	{
+		List<Integer> ret = new ArrayList<Integer>();
+		for(Integer t : list)
 			ret.add(t);
 		return ret;
 	}
