@@ -36,6 +36,7 @@ import experiment.scoredChangeExps.ScoredChangeExpBoosting;
 import experiment.scoredChangeExps.ScoredChangeExpClassDiff;
 import experiment.scoredChangeExps.ScoredChangeExpClustering;
 import experiment.scoredChangeExps.ScoredChangeExpTaskEval;
+import experiment.scoredChangeExps.ScoredChangeExpWeightedClustering;
 import featureExtraction.backgroundSubtraction.BackgroundSubtraction;
 
 public class Main {
@@ -69,7 +70,8 @@ public class Main {
 //		ScoredChangeExpBoosting exp = new ScoredChangeExpBoosting(objectsFile);
 //		ScoredChangeExpTaskEval exp = new ScoredChangeExpTaskEval(objectsFile);
 //		ScoredChangeExpClassDiff exp = new ScoredChangeExpClassDiff(objectsFile);
-		ScoredChangeExpClustering exp = new ScoredChangeExpClustering(objectsFile);
+//		ScoredChangeExpClustering exp = new ScoredChangeExpClustering(objectsFile);
+		ScoredChangeExpWeightedClustering exp = new ScoredChangeExpWeightedClustering(objectsFile);
 		exp.runExperiment(logFile);
 	}
 	
