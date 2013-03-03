@@ -15,6 +15,7 @@ import taskSolver.comparisonFunctions.ClusterDiffComparator;
 import utility.Behavior;
 import utility.Context;
 import utility.Modality;
+import utility.Utility;
 import weka.clusterers.XMeans;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -192,8 +193,8 @@ public class ClustererAgreementTest {
 					{
 						if(obj1.equals(obj2))
 							continue;
-						boolean same1 = (e1.getValue().getCluster(obj1) == e1.getValue().getCluster(obj2));
-						boolean same2 = (e2.getValue().getCluster(obj1) == e2.getValue().getCluster(obj2));
+						boolean same1 = clusters.get(e1.getKey()).get(obj1).equals(clusters.get(e1.getKey()).get(obj2));
+						boolean same2 = clusters.get(e2.getKey()).get(obj1).equals(clusters.get(e2.getKey()).get(obj2));
 						//do the two clusterers disagree on whether or not obj1 and obj2 belong in the same cluster?
 						if(same1 != same2)
 							disagreed++;
@@ -203,6 +204,24 @@ public class ClustererAgreementTest {
 				ret.put(pair, 1.0*disagreed/total);
 			}
 		}
+		
+		List<Context> contexts = getContexts();
+		List<String> headers = new ArrayList<String>();
+		double[][] data = new double[contexts.size()][contexts.size()];
+		for(int i = 0; i < contexts.size(); i++)
+		{
+			for(int j = 0; j < contexts.size(); j++)
+			{
+				Set<Context> temp = new HashSet<Context>();
+				temp.add(contexts.get(i));
+				temp.add(contexts.get(j));
+				data[i][j] = ret.get(temp);
+				data[j][i] = ret.get(temp);
+			}
+			headers.add(contexts.get(i).toString());
+		}
+		
+		Utility.printTable(headers, headers, data, false);
 		
 		return ret;
 	}
