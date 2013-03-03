@@ -113,7 +113,7 @@ public class ClusterOrderDetector {
 		ObjectOrderer<MatrixEntry> orderer = 
 				new ObjectOrderer<MatrixEntry>((OrderingDistanceFunction<MatrixEntry>) comps.values().iterator().next());
 		Map<List<Integer>, Integer> orderCounts = new HashMap<List<Integer>, Integer>();
-		for(int i = 0; i < 50; i++)
+		for(int i = 0; i < 50000; i++)
 		{
 			Set<MatrixEntry> toOrder = new HashSet<MatrixEntry>();
 			for(List<MatrixEntry> cluster : clusters.values())
@@ -194,14 +194,14 @@ public class ClusterOrderDetector {
 //		contexts.add(new Context(Behavior.low_drop, Modality.audio));
 //		contexts.add(new Context(Behavior.poke, Modality.audio));
 //		contexts.add(new Context(Behavior.push, Modality.audio));
-//		contexts.add(new Context(Behavior.shake, Modality.audio));
+		contexts.add(new Context(Behavior.shake, Modality.audio));
 //		contexts.add(new Context(Behavior.tap, Modality.audio));
 		//proprioception contexts
 //		contexts.add(new Context(Behavior.crush, Modality.proprioception));
 //		contexts.add(new Context(Behavior.grasp, Modality.proprioception));
 //		contexts.add(new Context(Behavior.high_velocity_shake, Modality.proprioception));
 //		contexts.add(new Context(Behavior.hold, Modality.proprioception));
-		contexts.add(new Context(Behavior.lift_slow, Modality.proprioception));
+//		contexts.add(new Context(Behavior.lift_slow, Modality.proprioception));
 //		contexts.add(new Context(Behavior.low_drop, Modality.proprioception));
 //		contexts.add(new Context(Behavior.poke, Modality.proprioception));
 //		contexts.add(new Context(Behavior.push, Modality.proprioception));
