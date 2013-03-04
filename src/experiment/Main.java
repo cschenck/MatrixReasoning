@@ -31,11 +31,6 @@ import matrices.patterns.XORMetaPattern;
 import utility.MultiThreadRunner;
 import utility.MultiThreadRunner.MultiThreadRunnable;
 import utility.Utility;
-import experiment.scoredChangeExps.ScoredChangeExp;
-import experiment.scoredChangeExps.ScoredChangeExpBoosting;
-import experiment.scoredChangeExps.ScoredChangeExpClassDiff;
-import experiment.scoredChangeExps.ScoredChangeExpClustering;
-import experiment.scoredChangeExps.ScoredChangeExpTaskEval;
 import experiment.scoredChangeExps.ScoredChangeExpWeightedClustering;
 import featureExtraction.backgroundSubtraction.BackgroundSubtraction;
 
@@ -72,6 +67,8 @@ public class Main {
 //		ScoredChangeExpClassDiff exp = new ScoredChangeExpClassDiff(objectsFile);
 //		ScoredChangeExpClustering exp = new ScoredChangeExpClustering(objectsFile);
 		ScoredChangeExpWeightedClustering exp = new ScoredChangeExpWeightedClustering(objectsFile);
+//		ScoredChangeExpTopKClustering exp = new ScoredChangeExpTopKClustering(objectsFile);
+//		ScoredChangeExpBoostedClustering exp = new ScoredChangeExpBoostedClustering(objectsFile);
 		exp.runExperiment(logFile);
 	}
 	

@@ -13,11 +13,13 @@ import java.util.Set;
 import matrices.MatrixEntry;
 import taskSolver.comparisonFunctions.ComparisonFunction;
 import taskSolver.comparisonFunctions.DistanceComparator;
+import taskSolver.comparisonFunctions.DistanceComparatorLogisticsNormalization;
 import taskSolver.comparisonFunctions.DistanceComparator.DistanceFunction;
 import utility.Behavior;
 import utility.Context;
 import utility.Modality;
 import utility.RunningMean;
+import utility.SpectralClusterer;
 import utility.Utility;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
@@ -55,24 +57,28 @@ public class ColorClustering {
 		manager.assignFeatures(objects, contexts);
 		
 		System.out.println("building instances");
-		Instances data = buildInstances(objects, contexts);
-		XMeans clusterer = new XMeans();
-		clusterer.setMaxNumClusters(4);
-		clusterer.setMinNumClusters(2);
+		Instances data = buildInstances(objects);
+//		XMeans clusterer = new XMeans();
+//		clusterer.setMaxNumClusters(4);
+//		clusterer.setMinNumClusters(2);
+		SpectralClusterer clusterer = new SpectralClusterer();
+		clusterer.setDistanceFunctionIsSimilarityFunction(true);
+		clusterer.setAlphaStar(0.95);
 		final Map<Context, ComparisonFunction> comps = new HashMap<Context, ComparisonFunction>();
 		for(Context c : contexts)
-			comps.put(c, new DistanceComparator(c, DistanceFunction.Euclidean, objects));
-		clusterer.setDistanceF(new weka.core.DistanceFunction() {
+			comps.put(c, new DistanceComparatorLogisticsNormalization(c, DistanceFunction.Euclidean, objects));
+		clusterer.setDistanceFunction(new weka.core.DistanceFunction() {
+			private Instances data = null;
 			public void setOptions(String[] arg0) throws Exception {throw new UnsupportedOperationException();}
 			public Enumeration listOptions() {throw new UnsupportedOperationException();}
 			public String[] getOptions() {throw new UnsupportedOperationException();}
 			public void update(Instance arg0) {throw new UnsupportedOperationException();}
 			public void setInvertSelection(boolean arg0) {throw new UnsupportedOperationException();}
-			public void setInstances(Instances arg0) {}
+			public void setInstances(Instances arg0) {data = arg0;}
 			public void setAttributeIndices(String arg0) {throw new UnsupportedOperationException();}
 			public void postProcessDistances(double[] arg0) {throw new UnsupportedOperationException();}
 			public boolean getInvertSelection() {throw new UnsupportedOperationException();}
-			public Instances getInstances() {throw new UnsupportedOperationException();}
+			public Instances getInstances() {return data;}
 			public String getAttributeIndices() {throw new UnsupportedOperationException();}
 			public double distance(Instance arg0, Instance arg1, double arg2,
 					PerformanceStats arg3) {throw new UnsupportedOperationException();}
@@ -87,15 +93,18 @@ public class ColorClustering {
 				RunningMean ret = new RunningMean();
 				for(Context c : getContexts())
 					ret.addValue(comps.get(c).compare(obj1, obj2));
-				return ret.getMean();
+				if(ret.getMean() == 1.0)
+					return 0.00000001;
+				else
+					return 1.0 - ret.getMean();
 			}
 		});
 		System.out.println("building clusterer");
 		clusterer.buildClusterer(data);
 		
-		System.out.println("clustering objects into " + clusterer.getMaxNumClusters() + " clusters");
+		System.out.println("clustering objects into " + clusterer.numberOfClusters() + " clusters");
 		Map<Integer, List<MatrixEntry>> clusters = new HashMap<Integer, List<MatrixEntry>>();
-		for(int i = 0; i < clusterer.getMaxNumClusters(); i++)
+		for(int i = 0; i < clusterer.numberOfClusters(); i++)
 			clusters.put(i, new ArrayList<MatrixEntry>());
 		for(MatrixEntry obj : objects)
 		{
@@ -119,7 +128,7 @@ public class ColorClustering {
 		return dataPoint;
 	}
 	
-	private static Instances buildInstances(List<MatrixEntry> objects, Set<Context> contexts)
+	private static Instances buildInstances(List<MatrixEntry> objects)
 	{
 		
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
@@ -165,7 +174,7 @@ public class ColorClustering {
 //		contexts.add(new Context(Behavior.high_velocity_shake, Modality.audio));
 //		contexts.add(new Context(Behavior.hold, Modality.audio));
 //		contexts.add(new Context(Behavior.lift_slow, Modality.audio));
-//		contexts.add(new Context(Behavior.low_drop, Modality.audio));
+		contexts.add(new Context(Behavior.low_drop, Modality.audio));
 //		contexts.add(new Context(Behavior.poke, Modality.audio));
 //		contexts.add(new Context(Behavior.push, Modality.audio));
 //		contexts.add(new Context(Behavior.shake, Modality.audio));
@@ -182,7 +191,7 @@ public class ColorClustering {
 //		contexts.add(new Context(Behavior.shake, Modality.proprioception));
 //		contexts.add(new Context(Behavior.tap, Modality.proprioception));
 		//color contexts	
-		contexts.add(new Context(Behavior.look, Modality.color));
+//		contexts.add(new Context(Behavior.look, Modality.color));
 		
 		return contexts;
 	}

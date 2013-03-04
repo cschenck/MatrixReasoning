@@ -31,17 +31,20 @@ import taskSolver.TaskSolver;
 import taskSolver.comparisonFunctions.CheatingComparator;
 import taskSolver.comparisonFunctions.ClusterDiffComparator;
 import taskSolver.comparisonFunctions.ComparisonFunction;
+import taskSolver.comparisonFunctions.WeightedComparisonFunction;
 import taskSolver.comparisonFunctions.DistanceComparator.DistanceFunction;
 import taskSolver.comparisonFunctions.DistanceComparatorLogisticsNormalization;
+import utility.AdaBoost;
 import utility.Behavior;
 import utility.Context;
 import utility.Modality;
 import featureExtraction.FeatureExtractionManager;
 
-public class ScoredChangeExpClustering {
+public class ScoredChangeExpBoostedClustering {
 	
 	private final static int NUM_TASKS = 50; 
 	private final static int NUM_CHOICES = 5;
+	private final static int NUM_FOLDS = 5;
 	private final static long RANDOM_SEED = 1;
 	private final static String TASK_CACHE_FILE = "cachedTasks.txt";
 	
@@ -70,7 +73,7 @@ public class ScoredChangeExpClustering {
 	
 	private Random rand;
 	
-	public ScoredChangeExpClustering(String objectFilepath)
+	public ScoredChangeExpBoostedClustering(String objectFilepath)
 	{
 		rand = new Random(RANDOM_SEED);
 		System.out.println("loading objects");
@@ -99,42 +102,56 @@ public class ScoredChangeExpClustering {
 		int total = 0;
 		int progress = 0;
 		
-		for(MatrixCompletionTask task : tasks)
+		for(int fold = 0; fold < NUM_FOLDS; fold++)
 		{
-			Map<MatrixEntry, Double> results = solver.solveTask(task, comparators);
+			System.out.println("Training weights for fold " + fold);
+			Map<ComparisonFunction, Double> weights = trainWeights(fold);
+			List<ComparisonFunction> weightedComparators = new ArrayList<ComparisonFunction>();
+			for(Entry<ComparisonFunction, Double> e : weights.entrySet())
+				weightedComparators.add(new WeightedComparisonFunction(e.getKey(), e.getValue()));
 			
-			Entry<MatrixEntry, Double> max = null;
-			for(Entry<MatrixEntry, Double> e : results.entrySet())
+			for(int i = 0; i < tasks.size(); i++)
 			{
-				if(max == null || e.getValue() > max.getValue())
-					max = e;
-			}
-			
-			total++;
-			if(task.isCorrect(max.getKey()))
-				correct++;
-			
-			try {
-				if(!task.isCorrect(max.getKey()))
-					fw.write("############## WRONG #################\n");
-				fw.write(task.toString() + "\n");
-				MatrixEntry correctChoice = null;
+				if(i % NUM_FOLDS != fold)
+					continue;
+				
+				MatrixCompletionTask task = tasks.get(i);
+				
+				Map<MatrixEntry, Double> results = solver.solveTask(task, weightedComparators);
+				
+				Entry<MatrixEntry, Double> max = null;
 				for(Entry<MatrixEntry, Double> e : results.entrySet())
 				{
-					fw.write(e.getKey().toString() + ":" + (100*e.getValue()) + "%\n");
-					if(task.isCorrect(e.getKey()))
-						correctChoice = e.getKey();
+					if(max == null || e.getValue() > max.getValue())
+						max = e;
 				}
-				fw.write("Correct = " + correctChoice.toString() + "\n");
-				fw.write("==================================================================\n");
-				fw.flush();
 				
-			} catch (IOException e1) {
-				e1.printStackTrace();
+				total++;
+				if(task.isCorrect(max.getKey()))
+					correct++;
+				
+				try {
+					if(!task.isCorrect(max.getKey()))
+						fw.write("############## WRONG #################\n");
+					fw.write(task.toString() + "\n");
+					MatrixEntry correctChoice = null;
+					for(Entry<MatrixEntry, Double> e : results.entrySet())
+					{
+						fw.write(e.getKey().toString() + ":" + (100*e.getValue()) + "%\n");
+						if(task.isCorrect(e.getKey()))
+							correctChoice = e.getKey();
+					}
+					fw.write("Correct = " + correctChoice.toString() + "\n");
+					fw.write("==================================================================\n");
+					fw.flush();
+					
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				
+				progress++;
+				System.out.println("Completed " + progress + " out of " + NUM_TASKS);
 			}
-			
-			progress++;
-			System.out.println("Completed " + progress + " out of " + NUM_TASKS);
 		}
 		
 		System.out.println("correct  =" + correct);
@@ -151,6 +168,52 @@ public class ScoredChangeExpClustering {
 			e.printStackTrace();
 		}
 	}
+	
+	private Map<ComparisonFunction, Double> trainWeights(int testFold)
+	{
+		Set<MatrixCompletionTask> trainTasks = new HashSet<MatrixCompletionTask>();
+		for(int i = 0; i < tasks.size(); i++)
+		{
+			if(i % NUM_FOLDS != testFold)
+				trainTasks.add(tasks.get(i));
+		}
+		
+		Map<ComparisonFunction, Map<MatrixCompletionTask, Boolean>> predictions = 
+				new HashMap<ComparisonFunction, Map<MatrixCompletionTask,Boolean>>();
+		
+		for(ComparisonFunction cf : this.comparators)
+		{
+			predictions.put(cf, new HashMap<MatrixCompletionTask, Boolean>());
+			for(int i = 0; i < tasks.size(); i++)
+			{
+				if(i % NUM_FOLDS == testFold)
+					continue;
+				
+				MatrixCompletionTask task = tasks.get(i);
+				
+				List<ComparisonFunction> temp = new ArrayList<ComparisonFunction>();
+				temp.add(cf);
+				Map<MatrixEntry, Double> results = solver.solveTask(task, temp);
+				
+				Entry<MatrixEntry, Double> max = null;
+				for(Entry<MatrixEntry, Double> e : results.entrySet())
+				{
+					if(max == null || e.getValue() > max.getValue())
+						max = e;
+				}
+				
+				if(task.isCorrect(max.getKey()))
+					predictions.get(cf).put(task, true);
+				else
+					predictions.get(cf).put(task, false);
+			}
+		}
+		
+		AdaBoost<ComparisonFunction, MatrixCompletionTask> booster = 
+				new AdaBoost<ComparisonFunction, MatrixCompletionTask>(comparators, predictions, trainTasks, rand);
+		
+		return booster.generateWeights();
+	}	
 	
 	private void initializeObjects(String objectFilepath)
 	{
@@ -174,18 +237,18 @@ public class ScoredChangeExpClustering {
 		contexts.add(new Context(Behavior.high_velocity_shake, Modality.audio));
 		contexts.add(new Context(Behavior.hold, Modality.audio));
 		contexts.add(new Context(Behavior.lift_slow, Modality.audio));
-//		contexts.add(new Context(Behavior.low_drop, Modality.audio));
+		contexts.add(new Context(Behavior.low_drop, Modality.audio));
 		contexts.add(new Context(Behavior.poke, Modality.audio));
 		contexts.add(new Context(Behavior.push, Modality.audio));
 		contexts.add(new Context(Behavior.shake, Modality.audio));
 		contexts.add(new Context(Behavior.tap, Modality.audio));
 		//proprioception contexts
 		contexts.add(new Context(Behavior.crush, Modality.proprioception));
-//		contexts.add(new Context(Behavior.grasp, Modality.proprioception));
+		contexts.add(new Context(Behavior.grasp, Modality.proprioception));
 		contexts.add(new Context(Behavior.high_velocity_shake, Modality.proprioception));
 		contexts.add(new Context(Behavior.hold, Modality.proprioception));
 		contexts.add(new Context(Behavior.lift_slow, Modality.proprioception));
-//		contexts.add(new Context(Behavior.low_drop, Modality.proprioception));
+		contexts.add(new Context(Behavior.low_drop, Modality.proprioception));
 		contexts.add(new Context(Behavior.poke, Modality.proprioception));
 		contexts.add(new Context(Behavior.push, Modality.proprioception));
 		contexts.add(new Context(Behavior.shake, Modality.proprioception));
@@ -205,29 +268,12 @@ public class ScoredChangeExpClustering {
 	{
 		comparators = new ArrayList<ComparisonFunction>();
 		
-		 /*
-		//cheating comparators for testing purposes
-		comparators.add(new CheatingComparator("weight", ORDERED_PROPERTIES.get("weight")));
-		comparators.add(new CheatingComparator("color"));
-		comparators.add(new CheatingComparator("contents"));
-		
-		/*/
-		
-		//distance function comparators
-		
 		for(Context c : getContexts())
 		{
-//			if(c.modality.equals(Modality.color))
-//				comparators.add(new DistanceComparatorLogisticsNormalization(c, DistanceFunction.Euclidean, objects));
-////				comparators.add(new CheatingComparator("color"));
-//			else
-//				comparators.add(new DistanceComparatorLogisticsNormalization(c, DistanceFunction.Euclidean, objects));
 			Set<Context> temp = new HashSet<Context>();
 			temp.add(c);
 			comparators.add(new ClusterDiffComparator(objects, temp));
 		}
-		
-		// */
 	}
 	
 	private void initializeTasks()

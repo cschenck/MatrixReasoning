@@ -7,25 +7,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import featureExtraction.FeatureExtractionManager;
-
 import matrices.MatrixEntry;
 import taskSolver.comparisonFunctions.DistanceComparator.DistanceFunction;
 import utility.Context;
-import utility.Modality;
 import utility.RunningMean;
-import utility.Utility;
-import weka.attributeSelection.ASEvaluation;
-import weka.attributeSelection.AttributeSelection;
-import weka.attributeSelection.GainRatioAttributeEval;
-import weka.attributeSelection.PrincipalComponents;
-import weka.attributeSelection.Ranker;
-import weka.attributeSelection.ReliefFAttributeEval;
-import weka.classifiers.Classifier;
-import weka.classifiers.functions.SMO;
-import weka.classifiers.functions.SMOreg;
+import utility.SpectralClusterer;
 import weka.clusterers.Clusterer;
-import weka.clusterers.XMeans;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
@@ -36,31 +23,24 @@ public class ClusterDiffComparator implements ComparisonFunction {
 	
 	private static Clusterer instantiateClusterer(final List<MatrixEntry> objects, final Set<Context> contexts)
 	{
-		XMeans ret = new XMeans();
-		
-		//TODO hack: this is a hack until I can figure out how to tune the parameters
-		ret.setMaxNumClusters(3);
-		ret.setMinNumClusters(3);
-		if(contexts.iterator().next().modality.equals(Modality.audio))
-		{
-			ret.setMaxNumClusters(4);
-			ret.setMinNumClusters(4);
-		}
-		
+		SpectralClusterer clusterer = new SpectralClusterer();
+		clusterer.setDistanceFunctionIsSimilarityFunction(true);
+		clusterer.setAlphaStar(0.95);
 		final Map<Context, ComparisonFunction> comps = new HashMap<Context, ComparisonFunction>();
 		for(Context c : contexts)
-			comps.put(c, new DistanceComparator(c, DistanceFunction.Euclidean, objects));
-		ret.setDistanceF(new weka.core.DistanceFunction() {
+			comps.put(c, new DistanceComparatorLogisticsNormalization(c, DistanceFunction.Euclidean, objects));
+		clusterer.setDistanceFunction(new weka.core.DistanceFunction() {
+			private Instances data = null;
 			public void setOptions(String[] arg0) throws Exception {throw new UnsupportedOperationException();}
 			public Enumeration listOptions() {throw new UnsupportedOperationException();}
 			public String[] getOptions() {throw new UnsupportedOperationException();}
 			public void update(Instance arg0) {throw new UnsupportedOperationException();}
 			public void setInvertSelection(boolean arg0) {throw new UnsupportedOperationException();}
-			public void setInstances(Instances arg0) {}
+			public void setInstances(Instances arg0) {data = arg0;}
 			public void setAttributeIndices(String arg0) {throw new UnsupportedOperationException();}
 			public void postProcessDistances(double[] arg0) {throw new UnsupportedOperationException();}
 			public boolean getInvertSelection() {throw new UnsupportedOperationException();}
-			public Instances getInstances() {throw new UnsupportedOperationException();}
+			public Instances getInstances() {return data;}
 			public String getAttributeIndices() {throw new UnsupportedOperationException();}
 			public double distance(Instance arg0, Instance arg1, double arg2,
 					PerformanceStats arg3) {throw new UnsupportedOperationException();}
@@ -75,13 +55,17 @@ public class ClusterDiffComparator implements ComparisonFunction {
 				RunningMean ret = new RunningMean();
 				for(Context c : contexts)
 					ret.addValue(comps.get(c).compare(obj1, obj2));
-				return ret.getMean();
+				if(ret.getMean() == 1.0) //this is to prevent 0's from causing exceptions when doing eigen value decomp
+					return 0.00000001; //make it close to zero, but not exactly zero
+				else
+					return 1.0 - ret.getMean();
 			}
 		});
-		return ret;
+		return clusterer;
 	}
 	
 	private Clusterer clusterer;
+	private Map<MatrixEntry, Integer> clusterLabels;
 	private Set<Context> contexts;
 	private List<MatrixEntry> objects; //this is kept merely so that objects can be looked up by their index number for convenience
 	private List<String> values = null;
@@ -89,6 +73,7 @@ public class ClusterDiffComparator implements ComparisonFunction {
 	public ClusterDiffComparator(List<MatrixEntry> objects, Set<Context> contexts)
 	{
 		this.contexts = contexts;
+		
 		this.objects = objects;
 		
 		setUpClusterer();
@@ -109,7 +94,7 @@ public class ClusterDiffComparator implements ComparisonFunction {
 		attributes.add(classAttribute);
 		
 		
-		int capacity = FeatureExtractionManager.NUM_EXECUTIONS*objects.size();
+		int capacity = objects.size();
 		
 		Instances trainData = new Instances("data", attributes, capacity);
 		
@@ -126,32 +111,21 @@ public class ClusterDiffComparator implements ComparisonFunction {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+		
+		this.clusterLabels = new HashMap<MatrixEntry, Integer>();
+		for(MatrixEntry obj : objects)
+		{
+			this.clusterLabels.put(obj, this.computeCluster(obj));
+		}
 	}
 
 	@Override
-	public double compare(MatrixEntry obj1, MatrixEntry obj2) {
-		Instance dataPoint1 = new DenseInstance(1);
-		Instance dataPoint2 = new DenseInstance(1);
-		
-		Attribute classAttribute = new Attribute("index");
-		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
-		attributes.add(classAttribute);
-		Instances testData = new Instances("testData", attributes, 2);
-		dataPoint1.setDataset(testData);
-		dataPoint2.setDataset(testData);
-		
-		
-		dataPoint1.setValue(0, objects.indexOf(obj1));
-		dataPoint2.setValue(0, objects.indexOf(obj2));
-		
-		testData.add(dataPoint1);
-		testData.add(dataPoint2);
-		
+	public double compare(MatrixEntry obj1, MatrixEntry obj2) {		
 		try {
 			if(this.values == null)
 			{
-				int i1 = clusterer.clusterInstance(dataPoint1);
-				int i2 = clusterer.clusterInstance(dataPoint2);
+				int i1 = this.getCluster(obj1);
+				int i2 = this.getCluster(obj2);
 				if(i1 == i2)
 					return 0.0;
 				else
@@ -159,10 +133,10 @@ public class ClusterDiffComparator implements ComparisonFunction {
 			}
 			else
 			{
-				double index1 = values.indexOf(clusterer.clusterInstance(dataPoint1));
-				double index2 = values.indexOf(clusterer.clusterInstance(dataPoint2));
+				int i1 = this.getCluster(obj1);
+				int i2 = this.getCluster(obj2);
 				//we want the range to be [0,1], so first get it to be [-1,1] then shift up by 1 and divide by 2
-				return (1.0 + 1.0*(index2 - index1)/(values.size() - 1))/2.0;
+				return (1.0 + 1.0*(i2 - i1)/(values.size() - 1))/2.0;
 			}
 			
 		} catch (Exception e) {
@@ -177,6 +151,11 @@ public class ClusterDiffComparator implements ComparisonFunction {
 	}
 	
 	public int getCluster(MatrixEntry obj)
+	{
+		return this.clusterLabels.get(obj);
+	}
+	
+	private int computeCluster(MatrixEntry obj)
 	{
 		Instance dataPoint1 = new DenseInstance(1);
 		

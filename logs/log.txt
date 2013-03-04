@@ -1,61 +1,61 @@
 [[ light_green_rice,  medium_brown_rice,  heavy_green_rice] 
  [light_brown_beans, medium_brown_beans, heavy_brown_beans] 
  [ light_blue_glass, medium_green_glass,                 ?]]
-light_brown_screws:2.7909137150633345%
+light_brown_screws:2.6217081186244804%
 light_blue_rice:0.0%
 heavy_blue_glass:100.0%
-medium_brown_screws:2.4099967902093207%
-heavy_brown_screws:73.46412066461913%
+medium_brown_screws:2.71032854655852%
+heavy_brown_screws:65.4048875776899%
 Correct = heavy_blue_glass
 ==================================================================
 [[heavy_brown_screws, medium_brown_beans, light_brown_glass] 
  [  heavy_brown_rice,  medium_brown_rice, light_green_beans] 
  [heavy_green_screws, medium_brown_glass,                 ?]]
-medium_blue_screws:0.0%
+medium_blue_screws:5.541056236831044%
 light_green_rice:100.0%
-heavy_blue_screws:0.10227597106595135%
-medium_green_glass:0.5499300475688312%
-medium_green_rice:1.4255419399580718%
+heavy_blue_screws:0.0%
+medium_green_glass:1.0914174488369477%
+medium_green_rice:2.5151250102867264%
 Correct = light_green_rice
 ==================================================================
 ############## WRONG #################
 [[ heavy_brown_beans, light_brown_glass, medium_brown_screws] 
  [ light_blue_screws, medium_brown_rice,    light_blue_glass] 
  [medium_green_glass,  heavy_blue_beans,                   ?]]
-light_brown_screws:13.894677497064349%
+light_brown_screws:13.37687911796372%
 light_green_glass:0.0%
 heavy_blue_glass:100.0%
-medium_blue_beans:13.238763985052918%
-medium_green_rice:37.32477589574381%
+medium_blue_beans:13.37687911796372%
+medium_green_rice:35.32135058938826%
 Correct = medium_green_rice
 ==================================================================
 [[   heavy_brown_rice, heavy_brown_glass, heavy_brown_screws] 
  [medium_green_screws, medium_green_rice, medium_green_beans] 
  [   light_blue_beans,  light_blue_glass,                  ?]]
-heavy_brown_beans:0.2564204658851241%
-light_brown_rice:77.22816905045867%
+heavy_brown_beans:7.051107497923488%
+light_brown_rice:80.23179216297655%
 light_blue_rice:100.0%
-heavy_blue_glass:6.447924207365989%
+heavy_blue_glass:9.63532451461087%
 medium_brown_beans:0.0%
 Correct = light_blue_rice
 ==================================================================
 [[light_brown_glass,   medium_blue_rice,  heavy_green_beans] 
  [medium_blue_glass, heavy_green_screws, medium_brown_beans] 
  [heavy_green_glass,  heavy_brown_beans,                  ?]]
-heavy_brown_glass:0.0%
-medium_brown_glass:17.07291967776853%
+heavy_brown_glass:6.468290719672512%
+medium_brown_glass:0.0%
 light_blue_rice:100.0%
-light_blue_glass:52.02764941967796%
-heavy_brown_screws:31.29309279748922%
+light_blue_glass:65.10262905322632%
+heavy_brown_screws:27.693553069852033%
 Correct = light_blue_rice
 ==================================================================
 [[medium_blue_glass, medium_blue_rice,  light_blue_screws] 
  [heavy_green_glass, heavy_green_rice, heavy_green_screws] 
  [light_brown_glass, heavy_brown_rice,                  ?]]
-heavy_green_beans:1.4369647501754048%
-medium_brown_glass:15.514637506969336%
+heavy_green_beans:0.11949462935225985%
+medium_brown_glass:34.345737703815026%
 light_green_beans:0.0%
-medium_blue_beans:4.7846601594690705%
+medium_blue_beans:25.628196422798773%
 medium_brown_screws:100.0%
 Correct = medium_brown_screws
 ==================================================================
@@ -64,37 +64,37 @@ Correct = medium_brown_screws
  [light_green_glass,  heavy_brown_glass,                ?]]
 heavy_blue_glass:100.0%
 light_green_beans:0.0%
-medium_brown_screws:23.179048781262967%
-medium_green_rice:10.189348284628508%
-heavy_brown_screws:24.17729161631862%
+medium_brown_screws:26.973574146611885%
+medium_green_rice:14.901841088167266%
+heavy_brown_screws:32.996868139663135%
 Correct = heavy_blue_glass
 ==================================================================
 [[heavy_green_screws, medium_blue_glass, medium_brown_rice] 
  [ light_green_glass, light_blue_screws,  light_brown_rice] 
  [medium_green_beans,  light_blue_glass,                 ?]]
-medium_blue_screws:21.457301851460656%
+medium_blue_screws:27.70677334498132%
 light_brown_screws:100.0%
-heavy_green_glass:5.576013970799547%
-light_brown_beans:53.858206601014466%
+heavy_green_glass:10.908464681437197%
+light_brown_beans:54.96603831416432%
 medium_blue_beans:0.0%
 Correct = light_brown_screws
 ==================================================================
 [[ heavy_green_rice,   heavy_brown_rice,    heavy_blue_rice] 
  [heavy_blue_screws, light_brown_screws, heavy_green_screws] 
  [heavy_brown_beans,  medium_blue_beans,                  ?]]
-light_blue_beans:77.33310356778145%
+light_blue_beans:73.77221589726513%
 medium_green_screws:0.0%
 light_green_beans:100.0%
-medium_brown_beans:85.48827503843152%
-heavy_blue_beans:77.59690827139003%
+medium_brown_beans:83.02834229649498%
+heavy_blue_beans:72.26040328213243%
 Correct = light_green_beans
 ==================================================================
 [[heavy_green_beans,   medium_blue_rice,  light_brown_rice] 
  [ heavy_green_rice, medium_blue_screws, light_brown_beans] 
  [heavy_green_glass,  medium_blue_beans,                 ?]]
-light_green_glass:79.37125352252691%
-heavy_brown_glass:8.596143645161785%
-medium_green_screws:3.49790995543739%
+light_green_glass:79.3697400184284%
+heavy_brown_glass:7.5051870773784515%
+medium_green_screws:1.4375870387765193%
 heavy_blue_rice:0.0%
 light_brown_glass:100.0%
 Correct = light_brown_glass
@@ -103,79 +103,80 @@ Correct = light_brown_glass
  [  heavy_blue_rice, medium_green_rice,  light_brown_glass] 
  [heavy_brown_glass,  medium_blue_rice,                  ?]]
 heavy_green_glass:0.0%
-light_brown_rice:82.68695310327297%
-light_brown_beans:85.7545165260284%
+light_brown_rice:83.16003670642253%
+light_brown_beans:83.16003670642253%
 light_green_beans:100.0%
-light_blue_screws:85.66822808918431%
+light_blue_screws:84.17268536198486%
 Correct = light_green_beans
 ==================================================================
 [[heavy_brown_glass,  heavy_brown_beans,   heavy_blue_screws] 
  [medium_blue_glass, medium_brown_beans, medium_green_screws] 
  [light_green_glass,  light_brown_beans,                   ?]]
 light_brown_screws:100.0%
-light_green_rice:63.3016541944039%
-heavy_green_rice:11.79256132056737%
+light_green_rice:52.777294891887095%
+heavy_green_rice:8.552475689027151%
 heavy_blue_glass:0.0%
-light_brown_glass:43.60035411369015%
+light_brown_glass:39.1602570207917%
 Correct = light_brown_screws
 ==================================================================
 [[heavy_blue_screws,  medium_green_glass,    light_blue_rice] 
  [heavy_brown_beans, medium_brown_screws, light_brown_screws] 
  [ heavy_green_rice,    medium_blue_rice,                  ?]]
-heavy_green_glass:4.0702842330376265%
-heavy_green_beans:3.2138943461011564%
+heavy_green_glass:3.3664691755825205%
+heavy_green_beans:3.4446920120472257%
 heavy_blue_glass:0.0%
 light_green_beans:100.0%
-light_brown_glass:84.18686224522858%
+light_brown_glass:79.8474353286413%
 Correct = light_green_beans
 ==================================================================
 [[light_brown_screws,    light_blue_glass, light_green_screws] 
  [ medium_blue_beans, medium_brown_screws,  medium_green_rice] 
  [heavy_green_screws,     heavy_blue_rice,                  ?]]
-medium_green_glass:0.674250401781639%
+medium_green_glass:0.0%
 heavy_brown_glass:100.0%
-medium_blue_glass:0.0%
-heavy_blue_glass:84.83855853316594%
-medium_brown_beans:9.958256624449994%
+medium_blue_glass:0.6566181852877477%
+heavy_blue_glass:93.66569242972955%
+medium_brown_beans:3.832430356797772%
 Correct = heavy_brown_glass
 ==================================================================
+############## WRONG #################
 [[  light_blue_rice,   medium_blue_glass,  heavy_blue_beans] 
  [light_green_beans, medium_brown_screws, heavy_brown_glass] 
  [light_brown_glass, medium_green_screws,                 ?]]
-heavy_brown_beans:84.03069639386851%
-heavy_brown_rice:85.78115060255332%
+heavy_brown_beans:100.0%
+heavy_brown_rice:98.60858826731265%
 light_blue_beans:0.0%
-heavy_green_screws:63.76952877953632%
-heavy_green_beans:100.0%
+heavy_green_screws:46.284676249677844%
+heavy_green_beans:86.59287378255277%
 Correct = heavy_green_beans
 ==================================================================
 [[ light_green_glass,  light_green_beans,  light_brown_screws] 
  [medium_brown_glass, medium_brown_beans, medium_brown_screws] 
  [  heavy_blue_glass,  heavy_brown_beans,                   ?]]
-light_blue_beans:0.5933622460823641%
+light_blue_beans:0.30537347446296026%
 heavy_green_screws:100.0%
-heavy_green_rice:54.86707729485932%
+heavy_green_rice:77.45888083162403%
 light_brown_beans:0.0%
-medium_blue_beans:0.5042355267190306%
+medium_blue_beans:0.2708826010964317%
 Correct = heavy_green_screws
 ==================================================================
 [[ light_blue_screws,  light_brown_glass, light_green_rice] 
  [  light_brown_rice,  light_brown_beans, light_blue_beans] 
  [light_green_screws, light_brown_screws,                ?]]
-medium_green_glass:0.2688969831033373%
+medium_green_glass:1.2365512880597878%
 heavy_green_screws:0.0%
-heavy_green_rice:0.3140631694425955%
+heavy_green_rice:0.19006572210763195%
 light_green_beans:100.0%
-heavy_blue_beans:0.24626699007924707%
+heavy_blue_beans:1.718233202474095%
 Correct = light_green_beans
 ==================================================================
 [[ heavy_blue_beans,   heavy_blue_glass,  heavy_green_rice] 
  [medium_brown_rice, medium_green_beans, medium_blue_glass] 
  [light_green_beans,  light_blue_screws,                 ?]]
-heavy_brown_rice:12.975878857683782%
+heavy_brown_rice:12.800322168813707%
 heavy_green_beans:0.0%
-heavy_blue_rice:11.493039998883544%
-heavy_brown_screws:0.46160149187475924%
+heavy_blue_rice:11.727207922948606%
+heavy_brown_screws:4.345854028164322%
 light_brown_glass:100.0%
 Correct = light_brown_glass
 ==================================================================
@@ -183,120 +184,120 @@ Correct = light_brown_glass
 [[ heavy_green_screws, light_green_beans, light_green_glass] 
  [  light_blue_screws, medium_blue_beans,  heavy_blue_glass] 
  [medium_brown_screws, heavy_brown_beans,                 ?]]
-heavy_green_glass:55.345063142091725%
+heavy_green_glass:47.89023007897031%
 medium_blue_glass:100.0%
-light_blue_rice:0.22653673791910278%
-heavy_blue_rice:0.0%
-light_brown_glass:88.10124155436675%
+light_blue_rice:0.0%
+heavy_blue_rice:8.372010849604552%
+light_brown_glass:71.237641367844%
 Correct = light_brown_glass
 ==================================================================
 [[ heavy_blue_glass, medium_brown_beans,   light_green_rice] 
  [heavy_blue_screws, medium_brown_glass, light_green_screws] 
  [  heavy_blue_rice,  medium_brown_rice,                  ?]]
-heavy_brown_glass:1.5612583526545605%
-heavy_brown_beans:1.3585254269832907%
-heavy_green_rice:0.0%
+heavy_brown_glass:0.2956907396783607%
+heavy_brown_beans:0.0%
+heavy_green_rice:2.937524324354126%
 light_green_beans:100.0%
-light_brown_glass:67.0201754777746%
+light_brown_glass:64.56070036131162%
 Correct = light_green_beans
 ==================================================================
 [[light_blue_screws, medium_brown_screws,  heavy_green_glass] 
  [ light_blue_glass,   medium_brown_rice, heavy_green_screws] 
  [  light_blue_rice,  medium_brown_glass,                  ?]]
-light_green_glass:6.303233504010927%
-heavy_brown_glass:62.59751068061842%
+light_green_glass:7.301842618952685%
+heavy_brown_glass:58.08131070177812%
 heavy_green_beans:100.0%
-medium_green_screws:8.25139221416254%
+medium_green_screws:8.762727113000148%
 light_brown_glass:0.0%
 Correct = heavy_green_beans
 ==================================================================
 [[medium_green_beans, light_green_screws,  heavy_green_glass] 
  [ medium_blue_beans, light_brown_screws, medium_brown_glass] 
  [ light_brown_beans,  light_blue_screws,                  ?]]
-heavy_brown_glass:65.57983376171671%
-medium_blue_rice:34.677404729106364%
+heavy_brown_glass:61.6715782828223%
+medium_blue_rice:40.299841687702845%
 medium_blue_glass:100.0%
-medium_green_rice:17.38120869363316%
+medium_green_rice:22.88347502505089%
 heavy_brown_screws:0.0%
 Correct = medium_blue_glass
 ==================================================================
 [[light_green_screws, medium_green_screws, heavy_green_screws] 
  [ light_blue_screws,    medium_blue_rice,  heavy_brown_beans] 
  [light_brown_screws,   medium_green_rice,                  ?]]
-medium_blue_screws:0.0%
+medium_blue_screws:7.949783544566243%
 heavy_brown_rice:100.0%
-light_brown_beans:0.17442036277021078%
-medium_blue_beans:0.8088340095333985%
-medium_brown_screws:0.004557197077139206%
+light_brown_beans:0.0%
+medium_blue_beans:0.6021638467432199%
+medium_brown_screws:0.05684830788233753%
 Correct = heavy_brown_rice
 ==================================================================
 [[ heavy_blue_rice, medium_brown_beans, light_green_glass] 
  [heavy_green_rice,  medium_blue_beans,  light_blue_glass] 
  [heavy_brown_rice, medium_green_beans,                 ?]]
 medium_blue_rice:0.0%
-heavy_green_beans:0.1736745017953997%
-light_blue_rice:65.93719629785814%
-medium_brown_screws:4.697045223615898%
+heavy_green_beans:2.622632510170165%
+light_blue_rice:65.29168323615686%
+medium_brown_screws:5.519864652757409%
 light_brown_glass:100.0%
 Correct = light_brown_glass
 ==================================================================
 [[ heavy_green_glass, medium_green_screws, light_green_beans] 
  [heavy_green_screws,   medium_blue_glass,  light_blue_beans] 
  [  heavy_brown_rice,  medium_brown_glass,                 ?]]
-light_green_rice:85.5430634255703%
-heavy_blue_screws:2.8434941362615715%
+light_green_rice:79.72675013150482%
+heavy_blue_screws:9.324394715130856%
 medium_brown_rice:0.0%
 light_blue_screws:100.0%
-heavy_brown_screws:3.464223578614245%
+heavy_brown_screws:11.16560211653659%
 Correct = light_blue_screws
 ==================================================================
 [[  heavy_green_rice,   medium_blue_glass, light_brown_beans] 
  [ heavy_green_glass,  medium_brown_glass,  light_blue_beans] 
  [heavy_green_screws, medium_brown_screws,                 ?]]
-heavy_blue_screws:0.5876951233967358%
-medium_green_glass:0.5347443278635374%
+heavy_blue_screws:0.0%
+medium_green_glass:2.1278550472744553%
 light_blue_rice:100.0%
-light_green_beans:75.71898581283858%
-heavy_blue_beans:0.0%
+light_green_beans:76.84529501064794%
+heavy_blue_beans:9.54730833700443%
 Correct = light_blue_rice
 ==================================================================
 [[ light_green_glass,  medium_brown_glass, heavy_green_glass] 
  [light_green_screws, medium_green_screws, heavy_green_beans] 
  [ light_green_beans,   medium_green_rice,                 ?]]
 medium_green_glass:0.0%
-heavy_brown_glass:82.74733018922007%
-heavy_brown_beans:82.60177185749848%
+heavy_brown_glass:62.499419174985746%
+heavy_brown_beans:62.53173812390843%
 heavy_green_rice:100.0%
-heavy_blue_beans:80.65799305046808%
+heavy_blue_beans:59.18146326383052%
 Correct = heavy_green_rice
 ==================================================================
 [[ heavy_blue_glass, medium_brown_beans, light_green_screws] 
  [heavy_brown_glass,  medium_blue_beans, light_brown_screws] 
  [heavy_green_glass, medium_green_beans,                  ?]]
 medium_green_glass:0.0%
-medium_blue_rice:5.907787059619443%
-medium_blue_glass:3.4073744963096946%
+medium_blue_rice:5.401726470942494%
+medium_blue_glass:2.6801681013829364%
 light_blue_screws:100.0%
-heavy_brown_screws:9.432142320193652%
+heavy_brown_screws:11.465400230314122%
 Correct = light_blue_screws
 ==================================================================
 [[ heavy_green_beans,   heavy_blue_beans, heavy_brown_beans] 
  [  medium_blue_rice,  medium_green_rice, medium_brown_rice] 
  [light_brown_screws, light_green_screws,                 ?]]
-light_green_rice:60.765123681744384%
-medium_brown_glass:2.116306544886417%
+light_green_rice:60.682011385955036%
+medium_brown_glass:2.8473471291615886%
 medium_brown_beans:0.0%
 light_blue_screws:100.0%
-heavy_brown_screws:7.9460134917764496%
+heavy_brown_screws:14.431460084687481%
 Correct = light_blue_screws
 ==================================================================
 [[   light_blue_rice,  light_blue_glass, light_blue_screws] 
  [medium_blue_screws, medium_blue_beans, medium_blue_glass] 
  [   heavy_blue_rice, heavy_blue_screws,                 ?]]
 light_brown_screws:0.0%
-heavy_green_screws:69.02361081450671%
-medium_brown_glass:1.7097848112132183%
-heavy_green_rice:69.12382791428234%
+heavy_green_screws:65.94996613049517%
+medium_brown_glass:2.701078355610543%
+heavy_green_rice:66.3186484744283%
 heavy_blue_glass:100.0%
 Correct = heavy_blue_glass
 ==================================================================
@@ -305,17 +306,17 @@ Correct = heavy_blue_glass
  [ heavy_blue_glass,   heavy_brown_beans,                  ?]]
 heavy_green_beans:100.0%
 medium_brown_glass:0.0%
-light_blue_rice:0.286549068059307%
-light_green_beans:1.185137989398329%
-medium_green_rice:2.1744711927411684%
+light_blue_rice:0.8203550338950628%
+light_green_beans:1.8235459595338481%
+medium_green_rice:2.8353187219910927%
 Correct = heavy_green_beans
 ==================================================================
 [[   heavy_brown_rice, heavy_blue_screws, heavy_green_beans] 
  [medium_green_screws,  medium_blue_rice, medium_blue_beans] 
  [   light_brown_rice,  light_blue_beans,                 ?]]
-medium_brown_glass:4.328351457638587%
-light_brown_beans:77.75194382235068%
-heavy_blue_rice:0.7848656634515261%
+medium_brown_glass:7.671125167957923%
+light_brown_beans:74.87244166940631%
+heavy_blue_rice:2.402490609873311%
 light_blue_glass:100.0%
 medium_brown_rice:0.0%
 Correct = light_blue_glass
@@ -324,9 +325,9 @@ Correct = light_blue_glass
  [medium_brown_glass, medium_blue_screws, medium_brown_beans] 
  [  heavy_blue_glass,  heavy_blue_screws,                  ?]]
 light_green_glass:0.0%
-heavy_green_glass:57.43528126038794%
-medium_blue_glass:0.2695761357756141%
-medium_blue_beans:14.846350439796115%
+heavy_green_glass:60.08614552795994%
+medium_blue_glass:0.3004646748679818%
+medium_blue_beans:19.202848601228638%
 heavy_blue_beans:100.0%
 Correct = heavy_blue_beans
 ==================================================================
@@ -334,30 +335,30 @@ Correct = heavy_blue_beans
  [heavy_green_screws,   medium_blue_glass, light_brown_rice] 
  [ heavy_blue_screws, medium_green_screws,                ?]]
 heavy_green_beans:0.0%
-heavy_blue_rice:0.7785161062988387%
-light_green_beans:96.23409291718364%
+heavy_blue_rice:2.5545138760350246%
+light_green_beans:91.67453169568192%
 light_brown_glass:100.0%
-light_green_screws:90.8757438175367%
+light_green_screws:88.21468652018638%
 Correct = light_brown_glass
 ==================================================================
 [[heavy_brown_screws,  medium_green_glass, light_blue_beans] 
  [heavy_green_screws,  medium_brown_beans, light_blue_glass] 
  [  heavy_blue_glass, medium_brown_screws,                ?]]
 light_green_rice:100.0%
-heavy_brown_rice:4.370599569640605%
-medium_green_beans:5.1733773950708395%
+heavy_brown_rice:7.6261565392476305%
+medium_green_beans:5.606134214613412%
 medium_green_screws:0.0%
-light_brown_glass:71.6826081831759%
+light_brown_glass:67.68934142722675%
 Correct = light_green_rice
 ==================================================================
 [[light_green_glass, light_green_screws,  light_blue_rice] 
  [ light_brown_rice,   light_green_rice, light_blue_glass] 
  [ light_blue_beans,  light_brown_glass,                ?]]
 heavy_green_glass:0.0%
-medium_green_glass:0.5131640616268514%
-medium_brown_screws:5.15850191504286%
+medium_green_glass:0.9076614823771765%
+medium_brown_screws:5.620691983125897%
 light_blue_screws:100.0%
-medium_brown_beans:4.440092868342043%
+medium_brown_beans:5.090591064471592%
 Correct = light_blue_screws
 ==================================================================
 [[  light_blue_glass,  heavy_brown_rice, medium_green_beans] 
@@ -365,128 +366,129 @@ Correct = light_blue_screws
  [light_brown_screws, heavy_green_glass,                  ?]]
 medium_green_screws:0.0%
 light_brown_beans:100.0%
-light_blue_rice:73.98931877634193%
-medium_green_rice:81.0539149760063%
-heavy_brown_screws:24.44556145182911%
+light_blue_rice:76.5662864498565%
+medium_green_rice:99.35990720389134%
+heavy_brown_screws:31.363495108022903%
 Correct = light_brown_beans
 ==================================================================
+############## WRONG #################
 [[   heavy_green_rice,  light_blue_screws, medium_brown_glass] 
  [medium_brown_screws, heavy_green_screws, medium_blue_screws] 
  [   light_blue_glass,  heavy_brown_beans,                  ?]]
-medium_green_glass:100.0%
-heavy_brown_glass:2.566733903458073%
-light_brown_rice:40.354544587814445%
+medium_green_glass:30.21391991601784%
+heavy_brown_glass:77.05869650198413%
+light_brown_rice:100.0%
 medium_blue_glass:0.0%
-heavy_blue_beans:34.639582433744124%
+heavy_blue_beans:57.2461675343726%
 Correct = medium_green_glass
 ==================================================================
 [[heavy_green_screws,  medium_blue_screws, light_green_screws] 
  [heavy_brown_screws, medium_green_screws,  light_blue_screws] 
  [ heavy_blue_screws, medium_brown_screws,                  ?]]
 light_brown_screws:100.0%
-medium_blue_rice:0.02022884922547223%
-medium_green_beans:0.7494100726005726%
-heavy_green_beans:0.7494100726005726%
-heavy_blue_beans:0.0%
+medium_blue_rice:0.10601858552604182%
+medium_green_beans:0.0%
+heavy_green_beans:2.0248862830405923%
+heavy_blue_beans:4.745228440624043%
 Correct = light_brown_screws
 ==================================================================
 [[heavy_brown_screws,  heavy_brown_beans,   heavy_green_rice] 
  [ medium_blue_beans, medium_green_glass, medium_brown_glass] 
  [  light_green_rice,   light_blue_glass,                  ?]]
-light_green_glass:89.97082852360403%
+light_green_glass:89.64428334795964%
 light_blue_beans:100.0%
-heavy_green_beans:0.5012506458673276%
-medium_green_screws:0.0%
-heavy_blue_rice:0.6038457476785808%
+heavy_green_beans:0.0%
+medium_green_screws:0.7403702773894925%
+heavy_blue_rice:3.919158942876532%
 Correct = light_blue_beans
 ==================================================================
 [[light_green_glass, medium_brown_rice,   heavy_green_rice] 
  [ light_blue_glass, medium_green_rice, heavy_brown_screws] 
  [light_brown_glass, medium_blue_glass,                  ?]]
-medium_blue_screws:3.4564752605197078%
+medium_blue_screws:7.075190527438263%
 heavy_blue_screws:100.0%
-light_blue_beans:3.313257071222603%
-medium_brown_glass:0.0%
-medium_brown_screws:0.93277341714552%
+light_blue_beans:3.5758077315277417%
+medium_brown_glass:0.12084379306524899%
+medium_brown_screws:0.0%
 Correct = heavy_blue_screws
 ==================================================================
 [[heavy_blue_screws, medium_green_screws,  light_brown_glass] 
  [heavy_green_glass,  medium_green_beans, light_brown_screws] 
  [ heavy_green_rice,   medium_green_rice,                  ?]]
 medium_green_glass:0.0%
-heavy_brown_glass:1.0866564809655153%
+heavy_brown_glass:2.585038612725367%
 light_blue_beans:100.0%
-heavy_blue_rice:6.1514880933035965%
-medium_brown_rice:6.63950607686777%
+heavy_blue_rice:12.573648856213357%
+medium_brown_rice:8.346559425095476%
 Correct = light_blue_beans
 ==================================================================
 [[heavy_blue_screws,  medium_green_beans,  light_brown_glass] 
  [ heavy_blue_glass, medium_green_screws, light_brown_screws] 
  [ heavy_blue_beans,  medium_green_glass,                  ?]]
-light_green_rice:69.3360068444787%
+light_green_rice:69.57473353351155%
 light_brown_rice:100.0%
-heavy_green_beans:0.0%
-heavy_blue_rice:0.4298086942729566%
-light_green_screws:54.690744027774315%
+heavy_green_beans:2.3742193679521737%
+heavy_blue_rice:0.0%
+light_green_screws:51.61576734174328%
 Correct = light_brown_rice
 ==================================================================
 [[ light_brown_rice,   light_blue_glass, light_green_beans] 
  [medium_brown_rice, medium_brown_glass, medium_green_rice] 
  [heavy_blue_screws,  heavy_green_glass,                 ?]]
 heavy_brown_rice:100.0%
-light_blue_beans:3.72163612796394%
-medium_blue_beans:3.6391029042256577%
-medium_brown_beans:4.228579141505306%
+light_blue_beans:1.4935902479928274%
+medium_blue_beans:1.4935902479928274%
+medium_brown_beans:0.6398203128215924%
 light_green_screws:0.0%
 Correct = heavy_brown_rice
 ==================================================================
 [[   heavy_blue_rice,  heavy_blue_screws,    heavy_blue_glass] 
  [medium_green_glass, medium_green_beans, medium_green_screws] 
  [ light_brown_glass,   light_brown_rice,                   ?]]
-medium_blue_screws:0.0%
+medium_blue_screws:1.5936198889565711%
 light_brown_beans:100.0%
-medium_brown_screws:8.926147268488165%
-light_green_screws:69.4246993465933%
-heavy_blue_beans:0.6925774286530899%
+medium_brown_screws:6.26777370698621%
+light_green_screws:65.75556263822907%
+heavy_blue_beans:0.0%
 Correct = light_brown_beans
 ==================================================================
 [[ heavy_green_beans, heavy_green_screws,  heavy_green_glass] 
  [medium_brown_beans,  medium_brown_rice, medium_brown_glass] 
  [   light_blue_rice,   light_blue_glass,                  ?]]
-light_green_rice:57.39307731936805%
-heavy_blue_screws:13.981181480172285%
+light_green_rice:57.21625500323626%
+heavy_blue_screws:18.649626035657498%
 light_blue_beans:100.0%
 heavy_green_rice:0.0%
-medium_brown_screws:6.303009804502016%
+medium_brown_screws:8.670622863486011%
 Correct = light_blue_beans
 ==================================================================
 [[ light_brown_glass,    light_blue_beans, light_green_beans] 
  [medium_green_glass, medium_green_screws, medium_blue_beans] 
  [  heavy_blue_beans,     heavy_blue_rice,                 ?]]
-light_brown_screws:2.472884370488585%
-light_brown_rice:2.6868097630485814%
+light_brown_screws:0.319844246466109%
+light_brown_rice:1.121509270162831%
 heavy_green_beans:100.0%
-medium_brown_screws:2.7656668430263793%
+medium_brown_screws:0.29176183901761515%
 medium_brown_beans:0.0%
 Correct = heavy_green_beans
 ==================================================================
 [[heavy_green_glass, medium_blue_screws, light_brown_beans] 
  [light_brown_glass,  light_blue_screws, heavy_green_beans] 
  [ light_blue_glass, heavy_green_screws,                 ?]]
-light_blue_beans:71.42402796698917%
+light_blue_beans:80.71277675433531%
 medium_brown_glass:0.0%
-heavy_green_rice:11.444591095585272%
-heavy_blue_rice:13.684713261678553%
+heavy_green_rice:13.555362342645367%
+heavy_blue_rice:20.40528135526455%
 medium_brown_beans:100.0%
 Correct = medium_brown_beans
 ==================================================================
 [[light_green_screws, light_brown_screws,  light_blue_screws] 
  [ medium_blue_glass, medium_brown_glass, medium_green_glass] 
  [  heavy_green_rice,   heavy_brown_rice,                  ?]]
-light_blue_beans:8.148509949265504%
+light_blue_beans:9.459889981466652%
 heavy_blue_rice:100.0%
-light_blue_glass:2.354358204787871%
-medium_brown_rice:17.245017387761223%
+light_blue_glass:4.379432042310654%
+medium_brown_rice:20.737501860654962%
 light_brown_glass:0.0%
 Correct = heavy_blue_rice
 ==================================================================
@@ -494,12 +496,12 @@ Correct = heavy_blue_rice
  [   heavy_blue_rice, medium_brown_screws, light_green_glass] 
  [light_brown_screws,    light_green_rice,                 ?]]
 heavy_blue_screws:100.0%
-heavy_green_glass:6.635996085440205%
-heavy_green_rice:57.29213254802617%
-light_green_screws:40.07918828100364%
+heavy_green_glass:17.093604607723016%
+heavy_green_rice:66.702396536888%
+light_green_screws:42.27365995434659%
 light_brown_glass:0.0%
 Correct = heavy_blue_screws
 ==================================================================
-correct  =48
-incorrect=2
+correct  =46
+incorrect=4
 total    =50
