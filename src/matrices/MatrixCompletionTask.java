@@ -14,14 +14,16 @@ public class MatrixCompletionTask {
 	private Matrix matrix;
 	private MatrixEntry correctAnswer;
 	private List<MatrixEntry> possibleAnswers;
-	private Random rand;
 	
 	public MatrixCompletionTask(Matrix matrix, MatrixEntry correctAnswer, List<MatrixEntry> possibleAnswers, Random rand)
 	{
 		this.matrix = matrix;
 		this.correctAnswer = correctAnswer;
-		this.possibleAnswers = possibleAnswers;
-		this.rand = rand;
+		this.possibleAnswers = new ArrayList<MatrixEntry>(possibleAnswers);
+		
+		if(!this.possibleAnswers.contains(correctAnswer))
+			this.possibleAnswers.add(correctAnswer);
+		this.possibleAnswers = Utility.randomizeOrder(this.possibleAnswers, rand);
 	}
 	
 	public int getNumRows()
@@ -56,7 +58,7 @@ public class MatrixCompletionTask {
 		if(!ret.contains(correctAnswer))
 			ret.add(correctAnswer);
 		
-		return Utility.randomizeOrder(ret, rand);
+		return ret;
 	}
 	
 	public boolean isCorrect(MatrixEntry object)
