@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import featureExtraction.FeatureExtractionManager;
+
 import utility.Context;
 import utility.RunningMean;
 import matrices.MatrixEntry;
@@ -61,6 +63,13 @@ public class DistanceComparatorLogisticsNormalization extends DistanceComparator
 			for(double[] b : obj2.getFeatures(context))
 				mean.addValue(this.computeDistance(a, b, this.getFunction()));
 		}
+		
+//		for(int i = 0; i < FeatureExtractionManager.NUM_EXECUTIONS; i++)
+//		{
+//			double[] a = obj1.getFeatures(context).get(i);
+//			double[] b = obj2.getFeatures(context).get(i);
+//			mean.addValue(this.computeDistance(a, b, this.getFunction()));
+//		}
 		
 		return this.normalize(mean.getMean());
 	}

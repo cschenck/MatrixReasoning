@@ -249,6 +249,10 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 		
 		for(File object : new File(this.getDataPath()).listFiles())
 		{
+			//skip files
+			if(!object.isDirectory())
+				continue;
+			
 			results.put(object.getName(), new ArrayList<double[]>());
 			
 			for(File execution : new File(object.getAbsolutePath() + "/trial_1").listFiles())

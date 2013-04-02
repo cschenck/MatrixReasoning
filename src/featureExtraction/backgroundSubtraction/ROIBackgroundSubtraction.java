@@ -16,10 +16,17 @@ import featureExtraction.backgroundSubtraction.BackgroundSubtraction.Pixel;
 
 public class ROIBackgroundSubtraction extends BackgroundSubtraction {
 	
-	private static final int MAX_X = 299;
-	private static final int MIN_X = 199;
-	private static final int MAX_Y = 416;
-	private static final int MIN_Y = 316;
+	//matrix reasoning corrupted dataset
+//	private static final int MAX_X = 299;
+//	private static final int MIN_X = 199;
+//	private static final int MAX_Y = 416;
+//	private static final int MIN_Y = 316;
+	
+	//matrix reasoning not corrupted dataset
+	private static final int MAX_X = 88+126;
+	private static final int MIN_X = 88;
+	private static final int MAX_Y = 195+103;
+	private static final int MIN_Y = 195;
 
 	public ROIBackgroundSubtraction(int width, int height, int id) {
 		super(width, height, id);

@@ -59,11 +59,11 @@ public class ColorClustering {
 		System.out.println("building instances");
 		Instances data = buildInstances(objects);
 //		XMeans clusterer = new XMeans();
-//		clusterer.setMaxNumClusters(4);
-//		clusterer.setMinNumClusters(2);
+//		clusterer.setMaxNumClusters(3);
+//		clusterer.setMinNumClusters(3);
 		SpectralClusterer clusterer = new SpectralClusterer();
 		clusterer.setDistanceFunctionIsSimilarityFunction(true);
-		clusterer.setAlphaStar(0.95);
+		clusterer.setAlphaStar(0.925);
 		final Map<Context, ComparisonFunction> comps = new HashMap<Context, ComparisonFunction>();
 		for(Context c : contexts)
 			comps.put(c, new DistanceComparatorLogisticsNormalization(c, DistanceFunction.Euclidean, objects));
@@ -174,7 +174,7 @@ public class ColorClustering {
 //		contexts.add(new Context(Behavior.high_velocity_shake, Modality.audio));
 //		contexts.add(new Context(Behavior.hold, Modality.audio));
 //		contexts.add(new Context(Behavior.lift_slow, Modality.audio));
-		contexts.add(new Context(Behavior.low_drop, Modality.audio));
+//		contexts.add(new Context(Behavior.low_drop, Modality.audio));
 //		contexts.add(new Context(Behavior.poke, Modality.audio));
 //		contexts.add(new Context(Behavior.push, Modality.audio));
 //		contexts.add(new Context(Behavior.shake, Modality.audio));
@@ -191,7 +191,7 @@ public class ColorClustering {
 //		contexts.add(new Context(Behavior.shake, Modality.proprioception));
 //		contexts.add(new Context(Behavior.tap, Modality.proprioception));
 		//color contexts	
-//		contexts.add(new Context(Behavior.look, Modality.color));
+		contexts.add(new Context(Behavior.look, Modality.color));
 		
 		return contexts;
 	}

@@ -35,6 +35,10 @@ public class AudioFeatureExtractor extends FeatureExtractor {
 		Map<String, List<double[]>> ret = new HashMap<String, List<double[]>>();
 		for(File object : new File(this.getDataPath()).listFiles())
 		{
+			//skip files
+			if(!object.isDirectory())
+				continue;
+			
 			Utility.debugPrint("Processing " + c.toString() + " for " + object.getName() + "... ");
 			List<double[]> features = new ArrayList<double[]>();
 			for(File execution : new File(object.getAbsolutePath() + "/trial_1").listFiles())

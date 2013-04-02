@@ -39,7 +39,7 @@ public class ColorClassification {
 		
 		Set<Context> contexts = getContexts();
 		String property = "color";
-		//String property = "weight";
+//		String property = "weight";
 //		String property = "contents";
 		
 		List<MatrixEntry> objects = MatrixEntry.loadMatrixEntryFile("objects.txt");
@@ -49,7 +49,7 @@ public class ColorClassification {
 		Evaluation eval = new Evaluation(data);
 		Classifier classifier = new SMO();
 //		Classifier classifier = new RandomForest();
-		eval.crossValidateModel(classifier, data, 4, rand);
+		eval.crossValidateModel(classifier, data, FeatureExtractionManager.NUM_EXECUTIONS, rand);
 		System.out.println(eval.toSummaryString());
 
 	}
@@ -121,27 +121,27 @@ public class ColorClassification {
 		Set<Context> contexts = new HashSet<Context>();
 		//add each context explicitly so we know which ones we're using
 		//audio contexts
-		contexts.add(new Context(Behavior.crush, Modality.audio));
-		contexts.add(new Context(Behavior.grasp, Modality.audio));
-		contexts.add(new Context(Behavior.high_velocity_shake, Modality.audio));
-		contexts.add(new Context(Behavior.hold, Modality.audio));
-		contexts.add(new Context(Behavior.lift_slow, Modality.audio));
-		contexts.add(new Context(Behavior.low_drop, Modality.audio));
-		contexts.add(new Context(Behavior.poke, Modality.audio));
-		contexts.add(new Context(Behavior.push, Modality.audio));
-		contexts.add(new Context(Behavior.shake, Modality.audio));
-		contexts.add(new Context(Behavior.tap, Modality.audio));
+//		contexts.add(new Context(Behavior.crush, Modality.audio));
+//		contexts.add(new Context(Behavior.grasp, Modality.audio));
+//		contexts.add(new Context(Behavior.high_velocity_shake, Modality.audio));
+//		contexts.add(new Context(Behavior.hold, Modality.audio));
+//		contexts.add(new Context(Behavior.lift_slow, Modality.audio));
+//		contexts.add(new Context(Behavior.low_drop, Modality.audio));
+//		contexts.add(new Context(Behavior.poke, Modality.audio));
+//		contexts.add(new Context(Behavior.push, Modality.audio));
+//		contexts.add(new Context(Behavior.shake, Modality.audio));
+//		contexts.add(new Context(Behavior.tap, Modality.audio));
 		//proprioception contexts
-		contexts.add(new Context(Behavior.crush, Modality.proprioception));
-		contexts.add(new Context(Behavior.grasp, Modality.proprioception));
-		contexts.add(new Context(Behavior.high_velocity_shake, Modality.proprioception));
-		contexts.add(new Context(Behavior.hold, Modality.proprioception));
-		contexts.add(new Context(Behavior.lift_slow, Modality.proprioception));
-		contexts.add(new Context(Behavior.low_drop, Modality.proprioception));
-		contexts.add(new Context(Behavior.poke, Modality.proprioception));
-		contexts.add(new Context(Behavior.push, Modality.proprioception));
-		contexts.add(new Context(Behavior.shake, Modality.proprioception));
-		contexts.add(new Context(Behavior.tap, Modality.proprioception));
+//		contexts.add(new Context(Behavior.crush, Modality.proprioception));
+//		contexts.add(new Context(Behavior.grasp, Modality.proprioception));
+//		contexts.add(new Context(Behavior.high_velocity_shake, Modality.proprioception));
+//		contexts.add(new Context(Behavior.hold, Modality.proprioception));
+//		contexts.add(new Context(Behavior.lift_slow, Modality.proprioception));
+//		contexts.add(new Context(Behavior.low_drop, Modality.proprioception));
+//		contexts.add(new Context(Behavior.poke, Modality.proprioception));
+//		contexts.add(new Context(Behavior.push, Modality.proprioception));
+//		contexts.add(new Context(Behavior.shake, Modality.proprioception));
+//		contexts.add(new Context(Behavior.tap, Modality.proprioception));
 		//color contexts
 		contexts.add(new Context(Behavior.look, Modality.color));
 		

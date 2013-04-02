@@ -21,11 +21,13 @@ import weka.core.neighboursearch.PerformanceStats;
 
 public class ClusterDiffComparator implements ComparisonFunction {
 	
+	private static final double ALPHA_STAR = 0.925;
+	
 	private static Clusterer instantiateClusterer(final List<MatrixEntry> objects, final Set<Context> contexts)
 	{
 		SpectralClusterer clusterer = new SpectralClusterer();
 		clusterer.setDistanceFunctionIsSimilarityFunction(true);
-		clusterer.setAlphaStar(0.95);
+		clusterer.setAlphaStar(ALPHA_STAR);
 		final Map<Context, ComparisonFunction> comps = new HashMap<Context, ComparisonFunction>();
 		for(Context c : contexts)
 			comps.put(c, new DistanceComparatorLogisticsNormalization(c, DistanceFunction.Euclidean, objects));

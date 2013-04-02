@@ -15,9 +15,9 @@ import matrices.MatrixEntry;
 
 public class FeatureExtractionManager {
 	
-	public final static String dataPath = "H:/research/matrix_reasoning_corrupted_data";
+	public final static String dataPath = "H:\\research\\matrix_reasoning";
 	public final static String featurePath = "features";
-	public final static int NUM_EXECUTIONS = 4;
+	public final static int NUM_EXECUTIONS = 10;
 	
 	private Map<Modality, FeatureExtractor> extractors;
 	private Random rand;
