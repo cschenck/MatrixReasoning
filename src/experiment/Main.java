@@ -28,11 +28,18 @@ import matrices.patterns.OneSameOneDifferentPattern;
 import matrices.patterns.Pattern;
 import matrices.patterns.SamePattern;
 import matrices.patterns.XORMetaPattern;
+import taskSolver.comparisonFunctions.ComparisonFunction;
+import utility.Behavior;
+import utility.Context;
+import utility.Modality;
 import utility.MultiThreadRunner;
 import utility.MultiThreadRunner.MultiThreadRunnable;
 import utility.Utility;
+import experiment.scoredChangeExps.ScoredChangeExp;
+import experiment.scoredChangeExps.ScoredChangeExpClustering;
 import experiment.scoredChangeExps.ScoredChangeExpGDescentClustering;
-import experiment.scoredChangeExps.ScoredChangeExpWeightedClustering;
+import experiment.scoredChangeExps.depricated.ScoredChangeExpWeightedClustering;
+import featureExtraction.FeatureExtractionManager;
 import featureExtraction.backgroundSubtraction.BackgroundSubtraction;
 
 public class Main {
@@ -66,12 +73,73 @@ public class Main {
 //		ScoredChangeExpBoosting exp = new ScoredChangeExpBoosting(objectsFile);
 //		ScoredChangeExpTaskEval exp = new ScoredChangeExpTaskEval(objectsFile);
 //		ScoredChangeExpClassDiff exp = new ScoredChangeExpClassDiff(objectsFile);
-//		ScoredChangeExpClustering exp = new ScoredChangeExpClustering(objectsFile);
+//		ScoredChangeExpClustering exp = new ScoredChangeExpClustering(initializeObjects(objectsFile));
 //		ScoredChangeExpWeightedClustering exp = new ScoredChangeExpWeightedClustering(objectsFile);
 //		ScoredChangeExpTopKClustering exp = new ScoredChangeExpTopKClustering(objectsFile);
 //		ScoredChangeExpBoostedClustering exp = new ScoredChangeExpBoostedClustering(objectsFile);
-		ScoredChangeExpGDescentClustering exp = new ScoredChangeExpGDescentClustering(objectsFile);
-		exp.runExperiment(logFile);
+//		ScoredChangeExpGDescentClustering exp = 
+//				new ScoredChangeExpGDescentClustering(initializeObjects(objectsFile, new Random(1)), getAllContexts());
+//		System.out.println(exp.runExperiment(new ArrayList<Context>(getAllContexts())));
+		
+		runExperiments();
+	}
+	
+	private static void runExperiments()
+	{
+		Random rand = new Random(1);
+		List<MatrixEntry> objects = initializeObjects(objectsFile, rand);
+		List<Experiment> exps = new ArrayList<Experiment>();
+		exps.add(new ScoredChangeExp(objects, getAllContexts()));
+		exps.add(new ScoredChangeExpClustering(objects, getAllContexts()));
+		exps.add(new ScoredChangeExpGDescentClustering(objects, getAllContexts()));
+		
+		ExperimentController ec = new ExperimentController(exps, getAllContexts(), rand);
+		ec.runExperiments();
+	}
+	
+	private static List<MatrixEntry> initializeObjects(String objectFilepath, Random rand)
+	{
+		try {
+			List<MatrixEntry> objects = MatrixEntry.loadMatrixEntryFile(objectFilepath);
+			FeatureExtractionManager feManager = new FeatureExtractionManager(rand);
+			feManager.assignFeatures(objects, getAllContexts());
+			return objects;
+		} catch (FileNotFoundException e) {
+			throw new IllegalArgumentException("The objects file was not found at " + objectFilepath);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private static Set<Context> getAllContexts() {
+		Set<Context> contexts = new HashSet<Context>();
+		//add each context explicitly so we know which ones we're using
+		//audio contexts
+		contexts.add(new Context(Behavior.crush, Modality.audio));
+		contexts.add(new Context(Behavior.grasp, Modality.audio));
+		contexts.add(new Context(Behavior.high_velocity_shake, Modality.audio));
+		contexts.add(new Context(Behavior.hold, Modality.audio));
+		contexts.add(new Context(Behavior.lift_slow, Modality.audio));
+		contexts.add(new Context(Behavior.low_drop, Modality.audio));
+		contexts.add(new Context(Behavior.poke, Modality.audio));
+		contexts.add(new Context(Behavior.push, Modality.audio));
+		contexts.add(new Context(Behavior.shake, Modality.audio));
+		contexts.add(new Context(Behavior.tap, Modality.audio));
+		//proprioception contexts
+		contexts.add(new Context(Behavior.crush, Modality.proprioception));
+		contexts.add(new Context(Behavior.grasp, Modality.proprioception));
+		contexts.add(new Context(Behavior.high_velocity_shake, Modality.proprioception));
+		contexts.add(new Context(Behavior.hold, Modality.proprioception));
+		contexts.add(new Context(Behavior.lift_slow, Modality.proprioception));
+		contexts.add(new Context(Behavior.low_drop, Modality.proprioception));
+		contexts.add(new Context(Behavior.poke, Modality.proprioception));
+		contexts.add(new Context(Behavior.push, Modality.proprioception));
+		contexts.add(new Context(Behavior.shake, Modality.proprioception));
+		contexts.add(new Context(Behavior.tap, Modality.proprioception));
+		//color contexts
+		contexts.add(new Context(Behavior.look, Modality.color));
+		
+		return contexts;
 	}
 	
 	private static void loadObjectsFile() throws FileNotFoundException

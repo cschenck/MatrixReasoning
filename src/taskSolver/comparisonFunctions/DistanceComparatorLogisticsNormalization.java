@@ -2,12 +2,15 @@ package taskSolver.comparisonFunctions;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import featureExtraction.FeatureExtractionManager;
 
 import utility.Context;
 import utility.RunningMean;
+import utility.UnorderedTuple;
 import matrices.MatrixEntry;
 
 public class DistanceComparatorLogisticsNormalization extends DistanceComparator {
@@ -19,7 +22,10 @@ public class DistanceComparatorLogisticsNormalization extends DistanceComparator
 	private double b;
 	private Context context;
 	
-	public DistanceComparatorLogisticsNormalization(Context context, DistanceFunction func, List<MatrixEntry> objects)
+	private Map<UnorderedTuple<MatrixEntry>, Double> cachedDistances = null;
+	
+	public DistanceComparatorLogisticsNormalization(Context context, DistanceFunction func, 
+			List<MatrixEntry> objects, boolean cacheComparisons)
 	{
 		super(context, func, objects);
 		this.context = context;
@@ -52,10 +58,32 @@ public class DistanceComparatorLogisticsNormalization extends DistanceComparator
 		b = (firstQuartile/thirdQuartile*Math.log(1.0/UPPER_VALUE - 1) - Math.log(1.0/LOWER_VALUE - 1))
 				/(1 - firstQuartile/thirdQuartile);
 		a = -1.0/thirdQuartile*(Math.log(1.0/UPPER_VALUE - 1) + b);
+		
+		if(cacheComparisons) //lets cache those comparisons for faster lookup
+		{
+			System.out.println(this.toString() + ":caching comparisons");
+			this.cachedDistances = new HashMap<UnorderedTuple<MatrixEntry>, Double>();
+			for(MatrixEntry obj1 : objects)
+			{
+				for(MatrixEntry obj2 : objects)
+				{
+					UnorderedTuple<MatrixEntry> pair = new UnorderedTuple<MatrixEntry>(obj1, obj2);
+					this.cachedDistances.put(pair, this.compare(obj1, obj2));
+				}
+			}
+		}
 	}
 
 	@Override
 	public double compare(MatrixEntry obj1, MatrixEntry obj2) {
+		//first check to see if we cached comparisons
+		if(this.cachedDistances != null)
+		{
+			UnorderedTuple<MatrixEntry> pair = new UnorderedTuple<MatrixEntry>(obj1, obj2);
+			if(this.cachedDistances.get(pair) != null)
+				return this.cachedDistances.get(pair).doubleValue();
+		}
+		
 		//return the average
 		RunningMean mean = new RunningMean();
 		for(double[] a : obj1.getFeatures(context))

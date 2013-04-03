@@ -30,7 +30,7 @@ public class ClusterDiffComparator implements ComparisonFunction {
 		clusterer.setAlphaStar(ALPHA_STAR);
 		final Map<Context, ComparisonFunction> comps = new HashMap<Context, ComparisonFunction>();
 		for(Context c : contexts)
-			comps.put(c, new DistanceComparatorLogisticsNormalization(c, DistanceFunction.Euclidean, objects));
+			comps.put(c, new DistanceComparatorLogisticsNormalization(c, DistanceFunction.Euclidean, objects, false));
 		clusterer.setDistanceFunction(new weka.core.DistanceFunction() {
 			private Instances data = null;
 			public void setOptions(String[] arg0) throws Exception {throw new UnsupportedOperationException();}

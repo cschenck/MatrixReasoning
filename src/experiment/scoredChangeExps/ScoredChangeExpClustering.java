@@ -36,11 +36,13 @@ import taskSolver.comparisonFunctions.DistanceComparatorLogisticsNormalization;
 import utility.Behavior;
 import utility.Context;
 import utility.Modality;
+import utility.Tuple;
+import experiment.Experiment;
 import featureExtraction.FeatureExtractionManager;
 
-public class ScoredChangeExpClustering {
+public class ScoredChangeExpClustering implements Experiment {
 	
-	private final static int NUM_TASKS = 50; 
+	private final static int NUM_TASKS = 500; 
 	private final static int NUM_CHOICES = 5;
 	private final static long RANDOM_SEED = 1;
 	private final static String TASK_CACHE_FILE = "cachedTasks.txt";
@@ -60,9 +62,10 @@ public class ScoredChangeExpClustering {
 	}
 	
 	private TaskSolver solver;
-	private List<ComparisonFunction> comparators;
+	private Map<Context, ComparisonFunction> allComparators;
 	private List<MatrixCompletionTask> tasks;
 	private List<MatrixEntry> objects;
+	private Set<Context> allContexts;
 	
 	private Set<Pattern> rowPatterns = new HashSet<Pattern>();
 	private Set<Pattern> colPatterns = new HashSet<Pattern>();
@@ -70,11 +73,13 @@ public class ScoredChangeExpClustering {
 	
 	private Random rand;
 	
-	public ScoredChangeExpClustering(String objectFilepath)
+	public ScoredChangeExpClustering(List<MatrixEntry> objects, Set<Context> allContexts)
 	{
 		rand = new Random(RANDOM_SEED);
-		System.out.println("loading objects");
-		this.initializeObjects(objectFilepath);
+//		System.out.println("loading objects");
+//		this.initializeObjects(objectFilepath);
+		this.objects = objects;
+		this.allContexts = allContexts;
 		System.out.println("initalizing patterns");
 		this.intializePatterns();
 		System.out.println("generating tasks");
@@ -86,18 +91,16 @@ public class ScoredChangeExpClustering {
 		System.out.println("initialization complete");
 	}
 	
-	public void runExperiment(String logfile)
+	public Tuple<Double, String> runExperiment(List<Context> contexts)
 	{
-		FileWriter fw = null;
-		try {
-			fw = new FileWriter(logfile);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		StringBuilder output = new StringBuilder("");
 		
 		int correct = 0;
 		int total = 0;
-		int progress = 0;
+		
+		List<ComparisonFunction> comparators = new ArrayList<ComparisonFunction>();
+		for(Context c : contexts)
+			comparators.add(allComparators.get(c));
 		
 		for(MatrixCompletionTask task : tasks)
 		{
@@ -114,42 +117,16 @@ public class ScoredChangeExpClustering {
 			if(task.isCorrect(max.getKey()))
 				correct++;
 			
-			try {
-				if(!task.isCorrect(max.getKey()))
-					fw.write("############## WRONG #################\n");
-				fw.write(task.toString() + "\n");
-				MatrixEntry correctChoice = null;
-				for(Entry<MatrixEntry, Double> e : results.entrySet())
-				{
-					fw.write(e.getKey().toString() + ":" + (100*e.getValue()) + "%\n");
-					if(task.isCorrect(e.getKey()))
-						correctChoice = e.getKey();
-				}
-				fw.write("Correct = " + correctChoice.toString() + "\n");
-				fw.write("==================================================================\n");
-				fw.flush();
-				
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-			
-			progress++;
-			System.out.println("Completed " + progress + " out of " + NUM_TASKS);
+			output.append("<");
+			if(!task.isCorrect(max.getKey()))
+				output.append("INCORRECT,");
+			else
+				output.append("CORRECT,");
+			output.append(max.getKey().getName() + ">,");
 		}
 		
-		System.out.println("correct  =" + correct);
-		System.out.println("incorrect=" + (total - correct));
-		System.out.println("total    =" + total);
-		
-		try {
-			fw.write("correct  =" + correct + "\n");
-			fw.write("incorrect=" + (total - correct) + "\n");
-			fw.write("total    =" + total + "\n");
-			fw.flush();
-			fw.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		Tuple<Double, String> ret = new Tuple<Double, String>((double)1.0*correct/total, output.toString());
+		return ret;
 	}
 	
 	private void initializeObjects(String objectFilepath)
@@ -157,7 +134,7 @@ public class ScoredChangeExpClustering {
 		try {
 			objects = MatrixEntry.loadMatrixEntryFile(objectFilepath);
 			FeatureExtractionManager feManager = new FeatureExtractionManager(rand);
-			feManager.assignFeatures(objects, getContexts());
+			feManager.assignFeatures(objects, getAllContexts());
 		} catch (FileNotFoundException e) {
 			throw new IllegalArgumentException("The objects file was not found at " + objectFilepath);
 		} catch (IOException e) {
@@ -165,35 +142,37 @@ public class ScoredChangeExpClustering {
 		}
 	}
 	
-	private Set<Context> getContexts() {
-		Set<Context> contexts = new HashSet<Context>();
-		//add each context explicitly so we know which ones we're using
-		//audio contexts
-		contexts.add(new Context(Behavior.crush, Modality.audio));
-		contexts.add(new Context(Behavior.grasp, Modality.audio));
-		contexts.add(new Context(Behavior.high_velocity_shake, Modality.audio));
-		contexts.add(new Context(Behavior.hold, Modality.audio));
-		contexts.add(new Context(Behavior.lift_slow, Modality.audio));
-//		contexts.add(new Context(Behavior.low_drop, Modality.audio));
-		contexts.add(new Context(Behavior.poke, Modality.audio));
-		contexts.add(new Context(Behavior.push, Modality.audio));
-		contexts.add(new Context(Behavior.shake, Modality.audio));
-		contexts.add(new Context(Behavior.tap, Modality.audio));
-		//proprioception contexts
-		contexts.add(new Context(Behavior.crush, Modality.proprioception));
-//		contexts.add(new Context(Behavior.grasp, Modality.proprioception));
-		contexts.add(new Context(Behavior.high_velocity_shake, Modality.proprioception));
-		contexts.add(new Context(Behavior.hold, Modality.proprioception));
-		contexts.add(new Context(Behavior.lift_slow, Modality.proprioception));
-//		contexts.add(new Context(Behavior.low_drop, Modality.proprioception));
-		contexts.add(new Context(Behavior.poke, Modality.proprioception));
-		contexts.add(new Context(Behavior.push, Modality.proprioception));
-		contexts.add(new Context(Behavior.shake, Modality.proprioception));
-		contexts.add(new Context(Behavior.tap, Modality.proprioception));
-		//color contexts
-		contexts.add(new Context(Behavior.look, Modality.color));
+	private Set<Context> getAllContexts() {
+//		Set<Context> contexts = new HashSet<Context>();
+//		//add each context explicitly so we know which ones we're using
+//		//audio contexts
+//		contexts.add(new Context(Behavior.crush, Modality.audio));
+//		contexts.add(new Context(Behavior.grasp, Modality.audio));
+//		contexts.add(new Context(Behavior.high_velocity_shake, Modality.audio));
+//		contexts.add(new Context(Behavior.hold, Modality.audio));
+//		contexts.add(new Context(Behavior.lift_slow, Modality.audio));
+////		contexts.add(new Context(Behavior.low_drop, Modality.audio));
+//		contexts.add(new Context(Behavior.poke, Modality.audio));
+//		contexts.add(new Context(Behavior.push, Modality.audio));
+//		contexts.add(new Context(Behavior.shake, Modality.audio));
+//		contexts.add(new Context(Behavior.tap, Modality.audio));
+//		//proprioception contexts
+//		contexts.add(new Context(Behavior.crush, Modality.proprioception));
+////		contexts.add(new Context(Behavior.grasp, Modality.proprioception));
+//		contexts.add(new Context(Behavior.high_velocity_shake, Modality.proprioception));
+//		contexts.add(new Context(Behavior.hold, Modality.proprioception));
+//		contexts.add(new Context(Behavior.lift_slow, Modality.proprioception));
+////		contexts.add(new Context(Behavior.low_drop, Modality.proprioception));
+//		contexts.add(new Context(Behavior.poke, Modality.proprioception));
+//		contexts.add(new Context(Behavior.push, Modality.proprioception));
+//		contexts.add(new Context(Behavior.shake, Modality.proprioception));
+//		contexts.add(new Context(Behavior.tap, Modality.proprioception));
+//		//color contexts
+//		contexts.add(new Context(Behavior.look, Modality.color));
+//		
+//		return contexts;
 		
-		return contexts;
+		return allContexts;
 	}
 
 	private void initializeSolver()
@@ -203,7 +182,7 @@ public class ScoredChangeExpClustering {
 	
 	private void initializeComparators()
 	{
-		comparators = new ArrayList<ComparisonFunction>();
+		allComparators = new HashMap<Context, ComparisonFunction>();
 		
 		 /*
 		//cheating comparators for testing purposes
@@ -215,7 +194,7 @@ public class ScoredChangeExpClustering {
 		
 		//distance function comparators
 		
-		for(Context c : getContexts())
+		for(Context c : getAllContexts())
 		{
 //			if(c.modality.equals(Modality.color))
 //				comparators.add(new DistanceComparatorLogisticsNormalization(c, DistanceFunction.Euclidean, objects));
@@ -224,7 +203,7 @@ public class ScoredChangeExpClustering {
 //				comparators.add(new DistanceComparatorLogisticsNormalization(c, DistanceFunction.Euclidean, objects));
 			Set<Context> temp = new HashSet<Context>();
 			temp.add(c);
-			comparators.add(new ClusterDiffComparator(objects, temp));
+			allComparators.put(c, new ClusterDiffComparator(objects, temp));
 		}
 		
 		// */
@@ -335,6 +314,11 @@ public class ScoredChangeExpClustering {
 			}
 			
 		}
+	}
+
+	@Override
+	public String name() {
+		return "ClusteringDiff";
 	}
 
 }
