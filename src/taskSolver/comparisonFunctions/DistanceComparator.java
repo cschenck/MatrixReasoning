@@ -16,6 +16,7 @@ public class DistanceComparator implements ComparisonFunction, OrderingDistanceF
 	private DistanceFunction func;
 	private double min;
 	private double max;
+	private boolean normalizationEnabled = true;
 	private Context context;
 	
 	public DistanceComparator(Context context, DistanceFunction func, List<MatrixEntry> objects)
@@ -48,6 +49,11 @@ public class DistanceComparator implements ComparisonFunction, OrderingDistanceF
 			}
 		}
 	}
+	
+	public void enableNormalization(boolean enabled)
+	{
+		this.normalizationEnabled = enabled;
+	}
 
 	@Override
 	public double compare(MatrixEntry obj1, MatrixEntry obj2) {
@@ -59,7 +65,10 @@ public class DistanceComparator implements ComparisonFunction, OrderingDistanceF
 				mean.addValue(this.computeDistance(a, b, func));
 		}
 		
-		return (mean.getMean() - min)/(max - min);
+		if(this.normalizationEnabled)
+			return (mean.getMean() - min)/(max - min);
+		else
+			return mean.getMean();
 	}
 	
 	public double compare(MatrixEntry obj1, int exec1, MatrixEntry obj2, int exec2)

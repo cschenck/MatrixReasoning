@@ -63,7 +63,7 @@ public class ColorClustering {
 //		clusterer.setMinNumClusters(3);
 		SpectralClusterer clusterer = new SpectralClusterer();
 		clusterer.setDistanceFunctionIsSimilarityFunction(true);
-		clusterer.setAlphaStar(0.925);
+		clusterer.setAlphaStar(0.97);
 		final Map<Context, ComparisonFunction> comps = new HashMap<Context, ComparisonFunction>();
 		for(Context c : contexts)
 		{

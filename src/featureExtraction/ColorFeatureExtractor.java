@@ -6,35 +6,47 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
 
+import taskSolver.comparisonFunctions.ClassificationDiffComparator;
 import utility.Context;
 import utility.Modality;
-import utility.RunningMean;
+import utility.MultiJobRunner;
 import utility.Tuple;
 import utility.Utility;
+import weka.attributeSelection.ASEvaluation;
+import weka.attributeSelection.AttributeSelection;
+import weka.attributeSelection.GainRatioAttributeEval;
 import weka.attributeSelection.PrincipalComponents;
+import weka.attributeSelection.Ranker;
+import weka.attributeSelection.ReliefFAttributeEval;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
+import experiment.ExperimentController;
 
 public class ColorFeatureExtractor extends FeatureExtractor {
-	
-	private static final int NUM_HUE_BINS = 8;
-	private static final int NUM_SAT_BINS = 8;
+
+	private static final int NUM_HUE_BINS = 32;
+	private static final int NUM_SAT_BINS = 16;
 	private static final int NUM_VAL_BINS = 1;
-	private static double PCA_VARIANCE_COVERED = 0.95;
+	private static final double PCA_VARIANCE_COVERED = 0.95;
+	private static final double FEATURE_SELECTION_GAIN_THRESHOLD = 0.075;
+	private static final boolean DO_PCA = false;
+	private static final boolean DO_FEATURE_SELECTION = false;
 
 	public ColorFeatureExtractor(String dataPath, String featurePath, Random rand) {
 		super(dataPath, featurePath);
 	}
-	
+
 
 	@Override
 	protected Modality getModality() {
@@ -43,262 +55,140 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 
 	@Override
 	protected Map<String, List<double[]>> generateFeatures(Context c) throws IOException {
-		
+
 		Utility.debugPrintln("generating features for " + c.toString());
-		
-		Map<String, List<Set<Pixel>>> results = new HashMap<String, List<Set<Pixel>>>();
-		
+
+		Map<String, List<double[]>> ret = new HashMap<String, List<double[]>>();
+		Queue<Tuple<File, Tuple<String, Integer>>> jobs = new LinkedList<Tuple<File, Tuple<String, Integer>>>();
+
 		for(File object : new File(this.getDataPath()).listFiles())
 		{
 			//skip files
 			if(!object.isDirectory())
 				continue;
-			
-			results.put(object.getName(), new ArrayList<Set<Pixel>>());
-			
+
+			ret.put(object.getName(), new ArrayList<double[]>());
+
 			for(File execution : new File(object.getAbsolutePath() + "/trial_1").listFiles())
 			{
 				//read the execution number off the execution file name, and subtract 1 to make it 0-based
 				int execNum = Integer.parseInt(execution.getName().substring(execution.getName().lastIndexOf("_") + 1)) - 1;
-				
+
 				//make a spot in the results for this data
-				while(results.get(object.getName()).size() <= execNum)
-					results.get(object.getName()).add(null);
-				
+				while(ret.get(object.getName()).size() <= execNum)
+					ret.get(object.getName()).add(null);
+
 				File dataFile = new File(execution.getAbsolutePath() + "/" + c.behavior.toString() + "/clouds/object_cloud.txt");
 				if(!dataFile.exists())
 				{
 					Utility.debugPrintln("WARNING! Cannot find file " + dataFile.getAbsolutePath());
 					continue;
 				}
-				
-				results.get(object.getName()).set(execNum, extractHistogramFeatures(dataFile));
+
+				jobs.add(new Tuple<File, Tuple<String,Integer>>(dataFile, 
+						new Tuple<String, Integer>(object.getName(), execNum)));
+				//results.get(object.getName()).set(execNum, extractHistogramFeatures(dataFile));
 			}
-			
-			for(Set<Pixel> fs : results.get(object.getName()))
+
+		}
+		
+		MultiJobRunner<Tuple<File, Tuple<String,Integer>>, double[]> runner = 
+				new MultiJobRunner<Tuple<File,Tuple<String,Integer>>, double[]>(
+						new MultiJobRunner.JobProcessor<Tuple<File,Tuple<String,Integer>>, double[]>() {
+							public double[] processJob(Tuple<File,Tuple<String,Integer>> job)
+							{
+								return extractHistogramFeatures(job.a);
+							}
+						}, 
+						ExperimentController.NUM_THREADS);
+		Map<Tuple<File, Tuple<String,Integer>>, double[]> results = runner.processJobs(jobs);
+		for(Entry<Tuple<File, Tuple<String,Integer>>, double[]> e : results.entrySet())
+		{
+			ret.get(e.getKey().b.a).set(e.getKey().b.b, e.getValue());
+		}
+		
+		Set<String> toRemove = new HashSet<String>();
+		for(Entry<String, List<double[]>> e : ret.entrySet())
+		{
+			for(double[] fs : e.getValue())
 			{
 				if(fs == null)
 				{
-					results.remove(object.getName());
-					Utility.debugPrintln("WARNING! Removing " + object.getName() + " from consideration because it was missing a feature set.");
+					toRemove.add(e.getKey());
+					Utility.debugPrintln("WARNING! Removing " + e.getKey() + " from consideration because it was missing a feature set.");
 					break;
 				}
 			}
 		}
-		
-		Map<String, List<double[]>> ret = computeFeatures(results);
-		//ret = removeRedundantFeatures(ret);
-		
+		for(String obj : toRemove)
+			ret.remove(obj);
+
 		//now do PCA
-		//reduceDimensionality(ret);
-		
+		reduceDimensionality(ret);
+
 		Utility.debugPrintln("Done generating color features for " + c.toString());
-		
+
 		return ret;
 	}
-	
-	private Map<String, List<double[]>> removeRedundantFeatures(Map<String, List<double[]>> features)
-	{
-		Utility.debugPrintln("Removing identical features");
-		int numRemoved = 0;
-		//let's do some post-processing, if there are any features that are identical for all objects
-		//across all trials, let's remove that feature. This is to get rid of image patches over all
-		//background (all black)
-		Map<String, List<List<Double>>> tempResults = new HashMap<String, List<List<Double>>>();
-		int featureLength = features.values().iterator().next().get(0).length;
-		for(int i = 0; i < featureLength; i++)
-		{
-			//first check to see if the i'th feature is identical over all objects/exeuctions
-			double value = features.values().iterator().next().get(0)[i];
-			boolean foundDiff = false;
-			for(List<double[]> list : features.values())
-			{
-				for(double[] dd : list)
-				{
-					if(dd[i] != value)
-					{
-						foundDiff = true;
-						break;
-					}
-				}
-				if(foundDiff)
-					break;
-			}
-
-			//if a difference was found, keep the feature
-			if(foundDiff)
-			{
-				for(Entry<String, List<double[]>> e : features.entrySet())
-				{
-					if(tempResults.get(e.getKey()) == null)
-						tempResults.put(e.getKey(), new ArrayList<List<Double>>());
-					for(int j = 0; j < e.getValue().size(); j++)
-					{
-						while(tempResults.get(e.getKey()).size() <= j)
-							tempResults.get(e.getKey()).add(new ArrayList<Double>());
-						double d = e.getValue().get(j)[i];
-						tempResults.get(e.getKey()).get(j).add(d);
-					}
-				}
-			}
-			else
-				numRemoved++;
-		}
-
-		//now put the features back in the results map
-		Map<String, List<double[]>> results = new HashMap<String, List<double[]>>();
-		results.clear();
-		for(Entry<String, List<List<Double>>> e : tempResults.entrySet())
-		{
-			List<double[]> list = new ArrayList<double[]>();
-			for(List<Double> dList : e.getValue())
-			{
-				double[] dd = new double[dList.size()];
-				for(int i = 0; i < dd.length; i++)
-					dd[i] = dList.get(i);
-				list.add(dd);
-			}
-			results.put(e.getKey(), list);
-		}
-		Utility.debugPrintln("removed " + numRemoved + " redundant features.");
-		return results;
-
-	}
-	
-	private Map<String, List<double[]>> computeFeatures(Map<String, List<Set<Pixel>>> pixels)
-	{
-		double minx = Double.MAX_VALUE;
-		double maxx = -Double.MAX_VALUE;
-		double miny = Double.MAX_VALUE;
-		double maxy = -Double.MAX_VALUE;
-		double minz = Double.MAX_VALUE;
-		double maxz = -Double.MAX_VALUE;
-		
-		for(List<Set<Pixel>> list : pixels.values())
-		{
-			for(Set<Pixel> set : list)
-			{
-				for(Pixel p : set)
-				{
-					if(p.x < minx)
-						minx = p.x;
-					if(p.x > maxx)
-						maxx = p.x;
-					if(p.y < miny)
-						miny = p.y;
-					if(p.y > maxy)
-						maxy = p.y;
-					if(p.z < minz)
-						minz = p.z;
-					if(p.z > maxz)
-						maxz = p.z;
-				}
-			}
-		}
-		
-		Pixel max = new Pixel(maxx, maxy, maxz, 0, 0, 0);
-		Pixel min = new Pixel(minx, miny, minz, 0, 0, 0);
-		
-		Map<String, List<double[]>> ret = new HashMap<String, List<double[]>>();
-		for(Entry<String, List<Set<Pixel>>> e : pixels.entrySet())
-		{
-			ret.put(e.getKey(), new ArrayList<double[]>());
-			for(Set<Pixel> set : e.getValue())
-			{
-				ret.get(e.getKey()).add(computeFeatures(set, max, min));
-			}
-		}
-		
-		return ret;
-	}
-	
-	private double[] computeFeatures(Set<Pixel> set, Pixel max, Pixel min) {
-		RunningMean[][][][] bins = new RunningMean[NUM_HUE_BINS][NUM_SAT_BINS][NUM_VAL_BINS][3];
-		
-		RunningMean avgx = new RunningMean();
-		RunningMean avgy = new RunningMean();
-		RunningMean avgz = new RunningMean();
-		for(Pixel p : set)
-		{
-			avgx.addValue(p.x);
-			avgy.addValue(p.y);
-			avgz.addValue(p.z);
-		}
-		
-		max = new Pixel(avgx.getMean()+3*avgx.getStandardDeviation(), 
-				avgy.getMean()+3*avgy.getStandardDeviation(), 
-				avgz.getMean()+3*avgz.getStandardDeviation(), 0, 0, 0);
-		min = new Pixel(avgx.getMean()-3*avgx.getStandardDeviation(), 
-				avgy.getMean()-3*avgy.getStandardDeviation(), 
-				avgz.getMean()-3*avgz.getStandardDeviation(), 0, 0, 0);
-		
-		for(Pixel p : set)
-		{
-			int i = Math.max(0,Math.min((int) ((p.x - min.x)/(max.x - min.x)*NUM_HUE_BINS), NUM_HUE_BINS - 1));
-			int j = Math.max(0,Math.min((int) ((p.y - min.y)/(max.y - min.y)*NUM_SAT_BINS), NUM_SAT_BINS - 1));
-			int k = Math.max(0,Math.min((int) ((p.z - min.z)/(max.z - min.z)*NUM_VAL_BINS), NUM_VAL_BINS - 1));
-			
-			for(int n = 0; n < 3; n++)
-			{
-				if(bins[i][j][k][n] == null)
-					bins[i][j][k][n] = new RunningMean();
-			}
-			
-			bins[i][j][k][0].addValue(p.h);
-			bins[i][j][k][1].addValue(p.s);
-			bins[i][j][k][2].addValue(p.v);
-		}
-		
-		double[] ret = new double[NUM_HUE_BINS*NUM_SAT_BINS*NUM_VAL_BINS*3];
-
-		int n = 0;
-		for(int m = 0; m < 3; m++)
-		{
-			for(int i = 0; i < NUM_HUE_BINS; i++)
-			{
-				for(int j = 0; j < NUM_SAT_BINS; j++)
-				{
-					for(int k = 0; k < NUM_VAL_BINS; k++)
-					{
-							if(bins[i][j][k][m] == null)
-								ret[n] = 0;
-							else
-								ret[n] = bins[i][j][k][m].getMean();
-							n++;
-					}
-				}
-			}
-		}
-		
-		return ret;
-	}
-
 
 	private void reduceDimensionality(Map<String, List<double[]>> features)
 	{
-		Utility.debugPrintln("computing Principal Components");
-		
+
 		Tuple<Map<String, List<Instance>>,Instances> temp = createInstances(features);
 		Map<String, List<Instance>> map = temp.a;
 		Instances data = temp.b;
-		
-		PrincipalComponents pca = new PrincipalComponents();
-		pca.setVarianceCovered(PCA_VARIANCE_COVERED);
-		try {
-			pca.buildEvaluator(data);
-			for(String obj : features.keySet())
-			{
-				for(int i = 0; i < features.get(obj).size(); i++)
+
+		if(DO_PCA)
+		{
+			Utility.debugPrintln("computing Principal Components");
+			PrincipalComponents pca = new PrincipalComponents();
+			pca.setVarianceCovered(PCA_VARIANCE_COVERED);
+			try {
+				pca.buildEvaluator(data);
+				for(String obj : features.keySet())
 				{
-					features.get(obj).set(i, pca.convertInstance(map.get(obj).get(i)).toDoubleArray());
+					for(int i = 0; i < features.get(obj).size(); i++)
+					{
+						features.get(obj).set(i, pca.convertInstance(map.get(obj).get(i)).toDoubleArray());
+					}
 				}
+			} catch (Exception e) {
+				throw new RuntimeException(e);
 			}
-		} catch (Exception e) {
-			throw new RuntimeException(e);
+			Utility.debugPrintln("done computing Principal Components");
 		}
-		Utility.debugPrintln("done computing Principal Components");
+		
+		if(DO_FEATURE_SELECTION)
+		{
+			Utility.debugPrintln("computing Feature Selection");
+//			AttributeSelection as = doRankedAttributeSelection(data, 
+//					new GainRatioAttributeEval(), FEATURE_SELECTION_GAIN_THRESHOLD);
+
+			AttributeSelection as = doRankedAttributeSelection(data, 
+					new ReliefFAttributeEval(), FEATURE_SELECTION_GAIN_THRESHOLD);
+			
+			try {
+				data = as.reduceDimensionality(data);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			
+			try {
+				as.reduceDimensionality(data);
+				for(String obj : features.keySet())
+				{
+					for(int i = 0; i < features.get(obj).size(); i++)
+					{
+						features.get(obj).set(i, as.reduceDimensionality(map.get(obj).get(i)).toDoubleArray());
+					}
+				}
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			Utility.debugPrintln("done computing Features Selection");
+		}
 	}
-	
+
 	private Tuple<Map<String, List<Instance>>,Instances> createInstances(Map<String, List<double[]>> features)
 	{
 		int numFeatures = features.values().iterator().next().get(0).length;
@@ -308,7 +198,7 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 			Attribute attribute = new Attribute("" + i);
 			attributes.add(attribute);
 		}
-		
+
 		Instances data = new Instances("data", attributes, 1);
 		Map<String, List<Instance>> map = new HashMap<String, List<Instance>>();
 		for(Entry<String, List<double[]>> e : features.entrySet())
@@ -319,58 +209,69 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 				Instance dataPoint = new DenseInstance(attributes.size());
 				for(int i = 0; i < fs.length; i++)
 					dataPoint.setValue(attributes.get(i), fs[i]);
-				
+
 				dataPoint.setDataset(data);
 				data.add(dataPoint);
 				map.get(e.getKey()).add(dataPoint);
 			}
 		}
-		
+
 		return new Tuple<Map<String,List<Instance>>, Instances>(map, data);
 	}
-	
-	private class Pixel {
-		public final double x, y, z, h, s, v;
-		public Pixel(double x, double y, double z, double h, double s, double v)
-		{
-			this.x = x;
-			this.y = y;
-			this.z = z;
-			this.h = h;
-			this.s = s;
-			this.v = v;
-		}
-	}
-	
-	private Set<Pixel> extractHistogramFeatures(File input)
+
+	private double[] extractHistogramFeatures(File input)
 	{
-		Set<Pixel> ret = new HashSet<Pixel>();
-		
+		double[][][] hist = new double[NUM_HUE_BINS][NUM_SAT_BINS][NUM_VAL_BINS];
+
 		Scanner scan = null;
 		try {
 			scan = new Scanner(input);
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		}
-		
+
 		int count = 0;
 		while(scan.hasNextLine())
 		{
 			Scanner line = new Scanner(scan.nextLine().replace(",", ""));
-			double x = line.nextDouble();
-			double y = line.nextDouble();
-			double z = line.nextDouble();
-			double[] hsv = convertRGBToHSV(new double[]{line.nextDouble()/255, line.nextDouble()/255, line.nextDouble()/255});
-			ret.add(new Pixel(x,y,z,hsv[0],hsv[1],hsv[2]));
+			//scan off xyz
+			line.next(); line.next(); line.next();
+
+			//scan out rgb
+			double[] rgb = new double[]{line.nextDouble()/255.0, line.nextDouble()/255.0, line.nextDouble()/255.0};
+			double[] hsv = convertRGBToHSV(rgb);
+			hist[(int) (hsv[0]*NUM_HUE_BINS)][(int) (hsv[1]*NUM_SAT_BINS)][(int) (hsv[2]*NUM_VAL_BINS)] += 1.0;
 			count++;
 		}
-		System.out.println(count + " = " + input.getAbsolutePath());
-		
+		//System.out.println(count + " = " + input.getAbsolutePath());
+
+		double[] ret = new double[NUM_HUE_BINS*NUM_SAT_BINS*NUM_VAL_BINS];
+
+		int n = 0;
+		for(int i = 0; i < NUM_HUE_BINS; i++)
+		{
+			for(int j = 0; j < NUM_SAT_BINS; j++)
+			{
+				for(int k = 0; k < NUM_VAL_BINS; k++)
+				{
+					ret[n] = hist[i][j][k];
+					n++;
+				}
+			}
+		}
+
+		//normalize this thing
+//		double sum = 0;
+//		for(double d : ret)
+//			sum += d;
+//		for(int i = 0; i < ret.length; i++)
+//			ret[i] /= sum;
+
 		return ret;
 	}
-	
-	
-	
+
+
+
 	private double[] convertRGBToHSV(double[] rgb)
 	{
 		//let's try HSV
@@ -380,7 +281,7 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 		double max = Math.max(Math.max(r, g), b);
 		double min = Math.min(Math.min(r, g), b);
 		double h, s, v;
-		
+
 		if(max == 0)
 			h = 0;
 		else if(max - min == 0)
@@ -395,15 +296,35 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 		if(h < 0)
 			h += 360;
 		h /= 360;
-			
+
 		s = (max == 0 ? 0 : (max -  min)/max);
-		
+
 		v = max;
-		
+
 		return new double[]{h, s, v};
 
 	}
 	
-	
+	private static AttributeSelection doRankedAttributeSelection(Instances data, ASEvaluation eval, double threshold)
+	{
+            AttributeSelection attsel = new AttributeSelection();
+
+            Ranker search = new Ranker();
+            search.setThreshold(threshold);
+            attsel.setRanking(true);
+
+            //perform attribute selection
+            attsel.setEvaluator(eval);
+            attsel.setSearch(search);
+            try {
+				attsel.SelectAttributes(data);
+			} catch (Exception e1) {
+				throw new RuntimeException(e1);
+			}
+
+            return attsel;
+    }
+
+
 
 }

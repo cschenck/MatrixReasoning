@@ -27,7 +27,7 @@ import utility.Utility;
 public class ExperimentController {
 	
 	private static final int NUM_SAMPLES = 200;
-	private static final int NUM_THREADS = 8;
+	public static final int NUM_THREADS = 8;
 	private static final String RESULTS_PATH = "results";
 	
 	private List<Experiment> exps;
