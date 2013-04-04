@@ -5,14 +5,17 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.Set;
 
 import utility.Context;
 import utility.Modality;
+import utility.RunningMean;
 import utility.Tuple;
 import utility.Utility;
 import weka.attributeSelection.PrincipalComponents;
@@ -23,9 +26,9 @@ import weka.core.Instances;
 
 public class ColorFeatureExtractor extends FeatureExtractor {
 	
-	private static final int NUM_HUE_BINS = 32;
+	private static final int NUM_HUE_BINS = 8;
 	private static final int NUM_SAT_BINS = 8;
-	private static final int NUM_VAL_BINS = 1;
+	private static final int NUM_VAL_BINS = 8;
 	private static double PCA_VARIANCE_COVERED = 0.95;
 
 	public ColorFeatureExtractor(String dataPath, String featurePath, Random rand) {
@@ -43,7 +46,7 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 		
 		Utility.debugPrintln("generating features for " + c.toString());
 		
-		Map<String, List<double[]>> results = new HashMap<String, List<double[]>>();
+		Map<String, List<Set<Pixel>>> results = new HashMap<String, List<Set<Pixel>>>();
 		
 		for(File object : new File(this.getDataPath()).listFiles())
 		{
@@ -51,7 +54,7 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 			if(!object.isDirectory())
 				continue;
 			
-			results.put(object.getName(), new ArrayList<double[]>());
+			results.put(object.getName(), new ArrayList<Set<Pixel>>());
 			
 			for(File execution : new File(object.getAbsolutePath() + "/trial_1").listFiles())
 			{
@@ -72,7 +75,7 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 				results.get(object.getName()).set(execNum, extractHistogramFeatures(dataFile));
 			}
 			
-			for(double[] fs : results.get(object.getName()))
+			for(Set<Pixel> fs : results.get(object.getName()))
 			{
 				if(fs == null)
 				{
@@ -83,14 +86,107 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 			}
 		}
 		
+		Map<String, List<double[]>> ret = computeFeatures(results);
+		
 		//now do PCA
-		//reduceDimensionality(results);
+		//reduceDimensionality(ret);
 		
 		Utility.debugPrintln("Done generating color features for " + c.toString());
 		
-		return results;
+		return ret;
 	}
 	
+	private Map<String, List<double[]>> computeFeatures(Map<String, List<Set<Pixel>>> pixels)
+	{
+		double minx = Double.MAX_VALUE;
+		double maxx = -Double.MAX_VALUE;
+		double miny = Double.MAX_VALUE;
+		double maxy = -Double.MAX_VALUE;
+		double minz = Double.MAX_VALUE;
+		double maxz = -Double.MAX_VALUE;
+		
+		for(List<Set<Pixel>> list : pixels.values())
+		{
+			for(Set<Pixel> set : list)
+			{
+				for(Pixel p : set)
+				{
+					if(p.x < minx)
+						minx = p.x;
+					if(p.x > maxx)
+						maxx = p.x;
+					if(p.y < miny)
+						miny = p.y;
+					if(p.y > maxy)
+						maxy = p.y;
+					if(p.z < minz)
+						minz = p.z;
+					if(p.z > maxz)
+						maxz = p.z;
+				}
+			}
+		}
+		
+		Pixel max = new Pixel(maxx, maxy, maxz, 0, 0, 0);
+		Pixel min = new Pixel(minx, miny, minz, 0, 0, 0);
+		
+		Map<String, List<double[]>> ret = new HashMap<String, List<double[]>>();
+		for(Entry<String, List<Set<Pixel>>> e : pixels.entrySet())
+		{
+			ret.put(e.getKey(), new ArrayList<double[]>());
+			for(Set<Pixel> set : e.getValue())
+			{
+				ret.get(e.getKey()).add(computeFeatures(set, max, min));
+			}
+		}
+		
+		return ret;
+	}
+	
+	private double[] computeFeatures(Set<Pixel> set, Pixel max, Pixel min) {
+		RunningMean[][][][] bins = new RunningMean[NUM_HUE_BINS][NUM_SAT_BINS][NUM_VAL_BINS][3];
+		for(Pixel p : set)
+		{
+			int i = Math.min((int) ((p.x - min.x)/(max.x - min.x)*NUM_HUE_BINS), NUM_HUE_BINS - 1);
+			int j = Math.min((int) ((p.y - min.y)/(max.y - min.y)*NUM_SAT_BINS), NUM_SAT_BINS - 1);
+			int k = Math.min((int) ((p.z - min.z)/(max.z - min.z)*NUM_VAL_BINS), NUM_VAL_BINS - 1);
+			
+			for(int n = 0; n < 3; n++)
+			{
+				if(bins[i][j][k][n] == null)
+					bins[i][j][k][n] = new RunningMean();
+			}
+			
+			bins[i][j][k][0].addValue(p.h);
+			bins[i][j][k][1].addValue(p.s);
+			bins[i][j][k][2].addValue(p.v);
+		}
+		
+		double[] ret = new double[NUM_HUE_BINS*NUM_SAT_BINS*NUM_VAL_BINS*3];
+
+		int n = 0;
+		for(int i = 0; i < NUM_HUE_BINS; i++)
+		{
+			for(int j = 0; j < NUM_SAT_BINS; j++)
+			{
+				for(int k = 0; k < NUM_VAL_BINS; k++)
+				{
+					for(int m = 0; m < 3; m++)
+					{
+						if(bins[i][j][k][m] == null)
+							ret[n] = 0;
+						else
+							ret[n] = bins[i][j][k][m].getMean();
+						n++;
+					}
+				}
+			}
+		}
+		
+		return ret;
+	}
+
+
 	private void reduceDimensionality(Map<String, List<double[]>> features)
 	{
 		Utility.debugPrintln("computing Principal Components");
@@ -146,9 +242,22 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 		return new Tuple<Map<String,List<Instance>>, Instances>(map, data);
 	}
 	
-	private double[] extractHistogramFeatures(File input)
+	private class Pixel {
+		public final double x, y, z, h, s, v;
+		public Pixel(double x, double y, double z, double h, double s, double v)
+		{
+			this.x = x;
+			this.y = y;
+			this.z = z;
+			this.h = h;
+			this.s = s;
+			this.v = v;
+		}
+	}
+	
+	private Set<Pixel> extractHistogramFeatures(File input)
 	{
-		double[][][] hist = new double[NUM_HUE_BINS][NUM_SAT_BINS][NUM_VAL_BINS];
+		Set<Pixel> ret = new HashSet<Pixel>();
 		
 		Scanner scan = null;
 		try {
@@ -161,38 +270,14 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 		while(scan.hasNextLine())
 		{
 			Scanner line = new Scanner(scan.nextLine().replace(",", ""));
-			//scan off xyz
-			line.next(); line.next(); line.next();
-			
-			//scan out rgb
-			double[] rgb = new double[]{line.nextDouble()/255.0, line.nextDouble()/255.0, line.nextDouble()/255.0};
-			double[] hsv = convertRGBToHSV(rgb);
-			hist[(int) (hsv[0]*NUM_HUE_BINS)][(int) (hsv[1]*NUM_SAT_BINS)][(int) (hsv[2]*NUM_VAL_BINS)] += 1.0;
+			double x = line.nextDouble();
+			double y = line.nextDouble();
+			double z = line.nextDouble();
+			double[] hsv = convertRGBToHSV(new double[]{line.nextDouble(), line.nextDouble(), line.nextDouble()});
+			ret.add(new Pixel(x,y,z,hsv[0],hsv[1],hsv[2]));
 			count++;
 		}
 		System.out.println(count + " = " + input.getAbsolutePath());
-		
-		double[] ret = new double[NUM_HUE_BINS*NUM_SAT_BINS*NUM_VAL_BINS];
-		
-		int n = 0;
-		for(int i = 0; i < NUM_HUE_BINS; i++)
-		{
-			for(int j = 0; j < NUM_SAT_BINS; j++)
-			{
-				for(int k = 0; k < NUM_VAL_BINS; k++)
-				{
-					ret[n] = hist[i][j][k];
-					n++;
-				}
-			}
-		}
-		
-		//first normalize this thing
-		double sum = 0;
-		for(double d : ret)
-			sum += d;
-		for(int i = 0; i < ret.length; i++)
-			ret[i] /= sum;
 		
 		return ret;
 	}
