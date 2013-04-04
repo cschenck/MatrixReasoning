@@ -316,15 +316,15 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 	@SuppressWarnings("unchecked")
 	private double computeAccuracy(int testFold, List<ComparisonFunction> temp) {
 		//first lets see if this value is cached
-//		Tuple<List<ComparisonFunction>, Integer> pair = new Tuple<List<ComparisonFunction>, Integer>(temp, testFold);
-//		int hash = Math.abs(pair.hashCode()%cachedAccuracies.length);
-//		if(cachedAccuracies[hash] == null)
-//			cachedAccuracies[hash] = new HashMap<Tuple<List<ComparisonFunction>, Integer>, Double>();
-//		Map<Tuple<List<ComparisonFunction>, Integer>, Double> map = cachedAccuracies[hash];
-//		synchronized(map) {
-//			if(map.get(pair) != null)
-//				return map.get(pair).doubleValue();
-//		}
+		Tuple<List<ComparisonFunction>, Integer> pair = new Tuple<List<ComparisonFunction>, Integer>(temp, testFold);
+		int hash = Math.abs(pair.hashCode()%cachedAccuracies.length);
+		if(cachedAccuracies[hash] == null)
+			cachedAccuracies[hash] = new HashMap<Tuple<List<ComparisonFunction>, Integer>, Double>();
+		Map<Tuple<List<ComparisonFunction>, Integer>, Double> map = cachedAccuracies[hash];
+		synchronized(map) {
+			if(map.get(pair) != null)
+				return map.get(pair).doubleValue();
+		}
 		
 		//if it wasn't stored, let's compute it
 		
@@ -354,9 +354,9 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 		double accuracy = (double)1.0*correct/total;
 		
 		//okay, now lets store it for later recall
-//		synchronized(map) {
-//			map.put(pair, accuracy);
-//		}
+		synchronized(map) {
+			map.put(pair, accuracy);
+		}
 		
 		return accuracy;
 	}	

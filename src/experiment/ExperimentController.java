@@ -34,7 +34,7 @@ public class ExperimentController {
 	private Random rand;
 	private Set<Context> allContexts;
 	
-	private Queue<Job> jobs = new LinkedList<Job>();
+	private Queue<Job> jobs;
 	
 	private Map<Job, Tuple<Double, String>> results = new HashMap<Job, Tuple<Double, String>>();
 	
@@ -188,14 +188,20 @@ public class ExperimentController {
 	}
 
 	private void buildQueue() {
+		List<Job> toBuild = new ArrayList<Job>();
 		for(int num = 1; num <= getContexts().size(); num++)
 		{
 			for(List<Context> list : Utility.createRandomListsOfSize(new ArrayList<Context>(getContexts()), num, NUM_SAMPLES, false, rand))
 			{
 				for(Experiment exp : exps)
-					jobs.add(new Job(exp, list));
+					toBuild.add(new Job(exp, list));
 			}
 		}
+		
+		//this is because the later things in the list tend to take the longest time
+		//so this way when we're watching the jobs progress, we can get an accurate idea
+		//of how long it will take by estimating based on the jobs/min
+		this.jobs = new LinkedList<Job>(Utility.randomizeOrder(toBuild, rand));
 	}
 	
 	private Set<Context> getContexts() {

@@ -12,6 +12,9 @@ import utility.RunningMean;
 import utility.Utility;
 
 public class ScoredChangeSolver implements TaskSolver {
+	
+	private static final boolean USE_COLUMNS = true;
+	private static final boolean USE_ROWS = true;
 
 	@Override
 	public Map<MatrixEntry, Double> solveTask(MatrixCompletionTask task, List<ComparisonFunction> comparators) {
@@ -19,12 +22,26 @@ public class ScoredChangeSolver implements TaskSolver {
 		List<List<MatrixEntry>> lists = new ArrayList<List<MatrixEntry>>();
 		for(int i = 0; i < task.getNumRows() - 1; i++)
 			lists.add(task.getRow(i));
-		Map<ComparisonFunction, Double> rowScores = computeScores(lists, comparators);
+		Map<ComparisonFunction, Double> rowScores = new HashMap<ComparisonFunction, Double>();
+		if(USE_ROWS)
+				rowScores = computeScores(lists, comparators);
+		else
+		{
+			for(ComparisonFunction cf : comparators)
+				rowScores.put(cf, 0.0);
+		}
 		
 		lists.clear();
 		for(int i = 0; i < task.getNumCols() - 1; i++)
 			lists.add(task.getCol(i));
-		Map<ComparisonFunction, Double> colScores = computeScores(lists, comparators);
+		Map<ComparisonFunction, Double> colScores = new HashMap<ComparisonFunction, Double>();
+		if(USE_COLUMNS)
+			colScores = computeScores(lists, comparators);
+		else
+		{
+			for(ComparisonFunction cf : comparators)
+				colScores.put(cf, 0.0);
+		}
 		
 		Map<ComparisonFunction, List<Double>> rowExpectedValues = new HashMap<ComparisonFunction, List<Double>>();
 		for(ComparisonFunction cf : comparators)
