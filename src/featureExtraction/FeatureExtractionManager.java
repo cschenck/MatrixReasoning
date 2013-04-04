@@ -15,7 +15,7 @@ import matrices.MatrixEntry;
 
 public class FeatureExtractionManager {
 	
-	public final static String dataPath = "F:\\research\\matrix_reasoning";
+	public final static String dataPath = "H:\\research\\matrix_reasoning";
 	public final static String featurePath = "features";
 	public final static int NUM_EXECUTIONS = 10;
 	

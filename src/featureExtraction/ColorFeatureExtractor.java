@@ -28,7 +28,7 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 	
 	private static final int NUM_HUE_BINS = 8;
 	private static final int NUM_SAT_BINS = 8;
-	private static final int NUM_VAL_BINS = 8;
+	private static final int NUM_VAL_BINS = 1;
 	private static double PCA_VARIANCE_COVERED = 0.95;
 
 	public ColorFeatureExtractor(String dataPath, String featurePath, Random rand) {
@@ -87,6 +87,7 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 		}
 		
 		Map<String, List<double[]>> ret = computeFeatures(results);
+		//ret = removeRedundantFeatures(ret);
 		
 		//now do PCA
 		//reduceDimensionality(ret);
@@ -94,6 +95,74 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 		Utility.debugPrintln("Done generating color features for " + c.toString());
 		
 		return ret;
+	}
+	
+	private Map<String, List<double[]>> removeRedundantFeatures(Map<String, List<double[]>> features)
+	{
+		Utility.debugPrintln("Removing identical features");
+		int numRemoved = 0;
+		//let's do some post-processing, if there are any features that are identical for all objects
+		//across all trials, let's remove that feature. This is to get rid of image patches over all
+		//background (all black)
+		Map<String, List<List<Double>>> tempResults = new HashMap<String, List<List<Double>>>();
+		int featureLength = features.values().iterator().next().get(0).length;
+		for(int i = 0; i < featureLength; i++)
+		{
+			//first check to see if the i'th feature is identical over all objects/exeuctions
+			double value = features.values().iterator().next().get(0)[i];
+			boolean foundDiff = false;
+			for(List<double[]> list : features.values())
+			{
+				for(double[] dd : list)
+				{
+					if(dd[i] != value)
+					{
+						foundDiff = true;
+						break;
+					}
+				}
+				if(foundDiff)
+					break;
+			}
+
+			//if a difference was found, keep the feature
+			if(foundDiff)
+			{
+				for(Entry<String, List<double[]>> e : features.entrySet())
+				{
+					if(tempResults.get(e.getKey()) == null)
+						tempResults.put(e.getKey(), new ArrayList<List<Double>>());
+					for(int j = 0; j < e.getValue().size(); j++)
+					{
+						while(tempResults.get(e.getKey()).size() <= j)
+							tempResults.get(e.getKey()).add(new ArrayList<Double>());
+						double d = e.getValue().get(j)[i];
+						tempResults.get(e.getKey()).get(j).add(d);
+					}
+				}
+			}
+			else
+				numRemoved++;
+		}
+
+		//now put the features back in the results map
+		Map<String, List<double[]>> results = new HashMap<String, List<double[]>>();
+		results.clear();
+		for(Entry<String, List<List<Double>>> e : tempResults.entrySet())
+		{
+			List<double[]> list = new ArrayList<double[]>();
+			for(List<Double> dList : e.getValue())
+			{
+				double[] dd = new double[dList.size()];
+				for(int i = 0; i < dd.length; i++)
+					dd[i] = dList.get(i);
+				list.add(dd);
+			}
+			results.put(e.getKey(), list);
+		}
+		Utility.debugPrintln("removed " + numRemoved + " redundant features.");
+		return results;
+
 	}
 	
 	private Map<String, List<double[]>> computeFeatures(Map<String, List<Set<Pixel>>> pixels)
@@ -145,11 +214,29 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 	
 	private double[] computeFeatures(Set<Pixel> set, Pixel max, Pixel min) {
 		RunningMean[][][][] bins = new RunningMean[NUM_HUE_BINS][NUM_SAT_BINS][NUM_VAL_BINS][3];
+		
+		RunningMean avgx = new RunningMean();
+		RunningMean avgy = new RunningMean();
+		RunningMean avgz = new RunningMean();
 		for(Pixel p : set)
 		{
-			int i = Math.min((int) ((p.x - min.x)/(max.x - min.x)*NUM_HUE_BINS), NUM_HUE_BINS - 1);
-			int j = Math.min((int) ((p.y - min.y)/(max.y - min.y)*NUM_SAT_BINS), NUM_SAT_BINS - 1);
-			int k = Math.min((int) ((p.z - min.z)/(max.z - min.z)*NUM_VAL_BINS), NUM_VAL_BINS - 1);
+			avgx.addValue(p.x);
+			avgy.addValue(p.y);
+			avgz.addValue(p.z);
+		}
+		
+		max = new Pixel(avgx.getMean()+3*avgx.getStandardDeviation(), 
+				avgy.getMean()+3*avgy.getStandardDeviation(), 
+				avgz.getMean()+3*avgz.getStandardDeviation(), 0, 0, 0);
+		min = new Pixel(avgx.getMean()-3*avgx.getStandardDeviation(), 
+				avgy.getMean()-3*avgy.getStandardDeviation(), 
+				avgz.getMean()-3*avgz.getStandardDeviation(), 0, 0, 0);
+		
+		for(Pixel p : set)
+		{
+			int i = Math.max(0,Math.min((int) ((p.x - min.x)/(max.x - min.x)*NUM_HUE_BINS), NUM_HUE_BINS - 1));
+			int j = Math.max(0,Math.min((int) ((p.y - min.y)/(max.y - min.y)*NUM_SAT_BINS), NUM_SAT_BINS - 1));
+			int k = Math.max(0,Math.min((int) ((p.z - min.z)/(max.z - min.z)*NUM_VAL_BINS), NUM_VAL_BINS - 1));
 			
 			for(int n = 0; n < 3; n++)
 			{
@@ -165,19 +252,19 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 		double[] ret = new double[NUM_HUE_BINS*NUM_SAT_BINS*NUM_VAL_BINS*3];
 
 		int n = 0;
-		for(int i = 0; i < NUM_HUE_BINS; i++)
+		for(int m = 0; m < 3; m++)
 		{
-			for(int j = 0; j < NUM_SAT_BINS; j++)
+			for(int i = 0; i < NUM_HUE_BINS; i++)
 			{
-				for(int k = 0; k < NUM_VAL_BINS; k++)
+				for(int j = 0; j < NUM_SAT_BINS; j++)
 				{
-					for(int m = 0; m < 3; m++)
+					for(int k = 0; k < NUM_VAL_BINS; k++)
 					{
-						if(bins[i][j][k][m] == null)
-							ret[n] = 0;
-						else
-							ret[n] = bins[i][j][k][m].getMean();
-						n++;
+							if(bins[i][j][k][m] == null)
+								ret[n] = 0;
+							else
+								ret[n] = bins[i][j][k][m].getMean();
+							n++;
 					}
 				}
 			}
@@ -273,7 +360,7 @@ public class ColorFeatureExtractor extends FeatureExtractor {
 			double x = line.nextDouble();
 			double y = line.nextDouble();
 			double z = line.nextDouble();
-			double[] hsv = convertRGBToHSV(new double[]{line.nextDouble(), line.nextDouble(), line.nextDouble()});
+			double[] hsv = convertRGBToHSV(new double[]{line.nextDouble()/255, line.nextDouble()/255, line.nextDouble()/255});
 			ret.add(new Pixel(x,y,z,hsv[0],hsv[1],hsv[2]));
 			count++;
 		}
