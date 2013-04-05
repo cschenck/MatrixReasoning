@@ -15,6 +15,7 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import matrices.Matrix;
 import matrices.MatrixCompletionTask;
@@ -28,6 +29,7 @@ import matrices.patterns.OneSameOneDifferentPattern;
 import matrices.patterns.Pattern;
 import matrices.patterns.SamePattern;
 import matrices.patterns.XORMetaPattern;
+import taskSolver.CachedScoredChangeSolver;
 import taskSolver.ScoredChangeSolver;
 import taskSolver.TaskSolver;
 import taskSolver.comparisonFunctions.CheatingComparator;
@@ -42,6 +44,7 @@ import utility.Modality;
 import utility.Tuple;
 import utility.Utility;
 import experiment.Experiment;
+import experiment.ExperimentController;
 import featureExtraction.FeatureExtractionManager;
 
 public class ScoredChangeExpGDescentClustering implements Experiment {
@@ -111,10 +114,7 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 		
 		for(int fold = 0; fold < NUM_FOLDS; fold++)
 		{
-			Map<ComparisonFunction, Double> weights = trainWeights(fold, comparators);
-			List<ComparisonFunction> weightedComparators = new ArrayList<ComparisonFunction>();
-			for(Entry<ComparisonFunction, Double> e : weights.entrySet())
-				weightedComparators.add(new WeightedComparisonFunction(e.getKey(), e.getValue()));
+			List<ComparisonFunction> prunedComparators = prune(fold, comparators);
 			
 			for(int i = 0; i < tasks.size(); i++)
 			{
@@ -123,7 +123,7 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 				
 				MatrixCompletionTask task = tasks.get(i);
 			
-				Map<MatrixEntry, Double> results = solver.solveTask(task, weightedComparators);
+				Map<MatrixEntry, Double> results = solver.solveTask(task, prunedComparators);
 			
 				Entry<MatrixEntry, Double> max = null;
 				for(Entry<MatrixEntry, Double> e : results.entrySet())
@@ -138,10 +138,12 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 				
 				String out = "<";
 				if(!task.isCorrect(max.getKey()))
+				{
 					out += "INCORRECT,";
+				}
 				else
 					out += "CORRECT,";
-				out += max.getKey().getName() + ">,";
+				out += max.getKey().getName() + ">";
 				
 				output.set(i, out);
 			}
@@ -231,7 +233,7 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 //		}
 //	}
 	
-	private Map<ComparisonFunction, Double> trainWeights(int testFold, List<ComparisonFunction> comparators)
+	private List<ComparisonFunction> prune(int testFold, List<ComparisonFunction> comparators)
 	{		
 		Map<List<ComparisonFunction>, Double> bestSetPerformance = new HashMap<List<ComparisonFunction>, Double>();
 		List<ComparisonFunction> bestSet = new ArrayList<ComparisonFunction>(comparators);
@@ -297,13 +299,11 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 				rand);
 		
 		//now set the weights
-		Map<ComparisonFunction, Double> ret = new HashMap<ComparisonFunction, Double>();
+		List<ComparisonFunction> ret = new ArrayList<ComparisonFunction>();
 		for(ComparisonFunction cf : comparators)
 		{
 			if(best.getKey().contains(cf))
-				ret.put(cf, 1.0);
-			else
-				ret.put(cf, 0.0);
+				ret.add(cf);
 		}
 		
 		return ret;
@@ -312,19 +312,22 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 	//this is to cache the accuracies for faster lookup, the array is to reduce collisions
 	//java wouldn't let me create an array with a generic type, so I had to leave off the generic
 	@SuppressWarnings("rawtypes")
-	private Map[] cachedAccuracies = new Map[100];
+//	private Map[] cachedAccuracies = new Map[ExperimentController.NUM_THREADS*100];
+	private Map<Tuple<List<ComparisonFunction>, Integer>, Double> cachedAccuracies = new ConcurrentHashMap<Tuple<List<ComparisonFunction>,Integer>, Double>();
 	@SuppressWarnings("unchecked")
 	private double computeAccuracy(int testFold, List<ComparisonFunction> temp) {
 		//first lets see if this value is cached
-		Tuple<List<ComparisonFunction>, Integer> pair = new Tuple<List<ComparisonFunction>, Integer>(temp, testFold);
-		int hash = Math.abs(pair.hashCode()%cachedAccuracies.length);
-		if(cachedAccuracies[hash] == null)
-			cachedAccuracies[hash] = new HashMap<Tuple<List<ComparisonFunction>, Integer>, Double>();
-		Map<Tuple<List<ComparisonFunction>, Integer>, Double> map = cachedAccuracies[hash];
-		synchronized(map) {
-			if(map.get(pair) != null)
-				return map.get(pair).doubleValue();
-		}
+//		Tuple<List<ComparisonFunction>, Integer> pair = new Tuple<List<ComparisonFunction>, Integer>(temp, testFold);
+//		if(cachedAccuracies.containsKey(pair))
+//			return cachedAccuracies.get(pair).doubleValue();
+//		int hash = Math.abs(pair.hashCode()%cachedAccuracies.length);
+//		if(cachedAccuracies[hash] == null)
+//			cachedAccuracies[hash] = new HashMap<Tuple<List<ComparisonFunction>, Integer>, Double>();
+//		Map<Tuple<List<ComparisonFunction>, Integer>, Double> map = cachedAccuracies[hash];
+//		synchronized(map) {
+//			if(map.get(pair) != null)
+//				return map.get(pair).doubleValue();
+//		}
 		
 		//if it wasn't stored, let's compute it
 		
@@ -354,9 +357,10 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 		double accuracy = (double)1.0*correct/total;
 		
 		//okay, now lets store it for later recall
-		synchronized(map) {
-			map.put(pair, accuracy);
-		}
+//		synchronized(map) {
+//			map.put(pair, accuracy);
+//		}
+//		cachedAccuracies.put(pair, accuracy);
 		
 		return accuracy;
 	}	
@@ -409,7 +413,8 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 
 	private void initializeSolver()
 	{
-		solver = new ScoredChangeSolver();
+//		solver = new ScoredChangeSolver();
+		solver = new CachedScoredChangeSolver(tasks, new HashSet<ComparisonFunction>(allComparators.values()));
 	}
 	
 	private void initializeComparators()

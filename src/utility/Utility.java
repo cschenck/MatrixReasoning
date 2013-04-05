@@ -434,8 +434,16 @@ public class Utility {
 		}
 		
 		Map<T, Double> ret = new HashMap<T, Double>();
-		for(Entry<T, Double> e : map.entrySet())
-			ret.put(e.getKey(), (e.getValue() - min)/(max - min));
+		if(max - min == 0) //special case
+		{
+			for(Entry<T, Double> e : map.entrySet())
+				ret.put(e.getKey(), 0.0);
+		}
+		else
+		{
+			for(Entry<T, Double> e : map.entrySet())
+				ret.put(e.getKey(), (e.getValue() - min)/(max - min));
+		}
 		
 		return ret;
 	}

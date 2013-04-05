@@ -88,13 +88,13 @@ public class Main {
 	{
 		Random rand = new Random(1);
 		List<MatrixEntry> objects = initializeObjects(objectsFile, rand);
-//		List<Experiment> exps = new ArrayList<Experiment>();
-//		exps.add(new ScoredChangeExp(objects, getAllContexts()));
-//		exps.add(new ScoredChangeExpClustering(objects, getAllContexts()));
-//		exps.add(new ScoredChangeExpGDescentClustering(objects, getAllContexts()));
-//		
-//		ExperimentController ec = new ExperimentController(exps, getAllContexts(), rand);
-//		ec.runExperiments();
+		List<Experiment> exps = new ArrayList<Experiment>();
+		exps.add(new ScoredChangeExp(objects, getAllContexts()));
+		exps.add(new ScoredChangeExpClustering(objects, getAllContexts()));
+		exps.add(new ScoredChangeExpGDescentClustering(objects, getAllContexts()));
+		
+		ExperimentController ec = new ExperimentController(exps, getAllContexts(), rand);
+		ec.runExperiments();
 	}
 	
 	private static List<MatrixEntry> initializeObjects(String objectFilepath, Random rand)

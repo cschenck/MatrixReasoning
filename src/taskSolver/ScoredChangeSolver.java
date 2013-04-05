@@ -78,7 +78,8 @@ public class ScoredChangeSolver implements TaskSolver {
 			ret.put(obj, -dis);
 		}
 		
-		return Utility.normalize(ret);
+		return ret;
+//		return Utility.normalize(ret);
 		
 //		MatrixEntry bestObj = null;
 //		double minValue = Double.MAX_VALUE;
@@ -119,6 +120,9 @@ public class ScoredChangeSolver implements TaskSolver {
 		for(Double d : colScores.values())
 			sum += d;
 		
+		if(sum == 0.0) //special case
+			return 0.0;
+		
 		//next let's sum the weighted squared difference
 		double squareDiff = 0;
 		for(ComparisonFunction cf : rowScores.keySet())
@@ -130,7 +134,8 @@ public class ScoredChangeSolver implements TaskSolver {
 			
 			//next compare those values to the expected values
 			for(int i = 0; i < values.size(); i++)
-				squareDiff += rowScores.get(cf)/sum*Math.pow(values.get(i) - rowExpectedValues.get(cf).get(i), 2);
+//				squareDiff += rowScores.get(cf)/sum*Math.pow(values.get(i) - rowExpectedValues.get(cf).get(i), 2);
+				squareDiff += rowScores.get(cf)*Math.pow(values.get(i) - rowExpectedValues.get(cf).get(i), 2);
 			
 		}
 		
@@ -143,7 +148,8 @@ public class ScoredChangeSolver implements TaskSolver {
 			
 			//next compare those values to the expected values
 			for(int i = 0; i < values.size(); i++)
-				squareDiff += colScores.get(cf)/sum*Math.pow(values.get(i) - colExpectedValues.get(cf).get(i), 2);
+//				squareDiff += colScores.get(cf)/sum*Math.pow(values.get(i) - colExpectedValues.get(cf).get(i), 2);
+				squareDiff += colScores.get(cf)*Math.pow(values.get(i) - colExpectedValues.get(cf).get(i), 2);
 			
 		}
 		

@@ -112,5 +112,21 @@ public class DistanceComparator implements ComparisonFunction, OrderingDistanceF
 	public double distance(MatrixEntry obj1, MatrixEntry obj2) {
 		return this.compare(obj1, obj2);
 	}
+	
+	@Override
+	public boolean equals(Object obj)
+	{
+		if(!(obj instanceof DistanceComparator))
+			return false;
+		
+		DistanceComparator dc = (DistanceComparator) obj;
+		return dc.context.equals(this.context);
+	}
+	
+	@Override
+	public int hashCode()
+	{
+		return this.context.hashCode();
+	}
 
 }

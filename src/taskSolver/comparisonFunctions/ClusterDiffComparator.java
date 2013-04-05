@@ -178,5 +178,21 @@ public class ClusterDiffComparator implements ComparisonFunction {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	@Override
+	public boolean equals(Object obj)
+	{
+		if(!(obj instanceof ClusterDiffComparator))
+			return false;
+		
+		ClusterDiffComparator dc = (ClusterDiffComparator) obj;
+		return dc.contexts.equals(this.contexts);
+	}
+	
+	@Override
+	public int hashCode()
+	{
+		return this.contexts.hashCode();
+	}
 
 }

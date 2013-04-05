@@ -18,6 +18,7 @@ import java.util.Set;
 import utility.Behavior;
 import utility.Context;
 import utility.Modality;
+import utility.MultiJobRunner;
 import utility.MultiThreadRunner;
 import utility.MultiThreadRunner.MultiThreadRunnable;
 import utility.RunningMean;
@@ -36,7 +37,7 @@ public class ExperimentController {
 	
 	private Queue<Job> jobs;
 	
-	private Map<Job, Tuple<Double, String>> results = new HashMap<Job, Tuple<Double, String>>();
+	private Map<Job, Tuple<Double, String>> results;
 	
 	public ExperimentController(List<Experiment> exps, Set<Context> allContexts, Random rand)
 	{
@@ -55,54 +56,60 @@ public class ExperimentController {
 			this.exp = exp;
 			this.list = list;
 		}
-	}
-	
-	private class JobProcessor implements MultiThreadRunnable
-	{
-
-		private int remainingJobs = 0;
-		private int initialJobs = 0;
-		private Job currentJob = null;
 		
 		@Override
-		public void run() {
-			
-			while(true)
-			{
-				synchronized(jobs) {
-					if(jobs.isEmpty())
-						break;
-					else
-					{
-						if(initialJobs == 0)
-							initialJobs = jobs.size();
-						currentJob = jobs.poll();
-						remainingJobs = jobs.size();
-					}
-				}
-				
-				Tuple<Double, String> result = currentJob.exp.runExperiment(currentJob.list);
-				
-				synchronized(results) {
-					results.put(currentJob, result);
-				}
-			}
-			
-		}
-
-		@Override
-		public String getStatus() {
-			if(currentJob == null)
-				return "";
-			else
-				return currentJob.exp.name() + " : " + currentJob.list.toString();
-		}
-
-		@Override
-		public String getTitle() {
-			return remainingJobs + "/" + initialJobs;
+		public String toString()
+		{
+			return exp.name() + ":" + list.toString();
 		}
 	}
+	
+//	private class JobProcessor implements MultiThreadRunnable
+//	{
+//
+//		private int remainingJobs = 0;
+//		private int initialJobs = 0;
+//		private Job currentJob = null;
+//		
+//		@Override
+//		public void run() {
+//			
+//			while(true)
+//			{
+//				synchronized(jobs) {
+//					if(jobs.isEmpty())
+//						break;
+//					else
+//					{
+//						if(initialJobs == 0)
+//							initialJobs = jobs.size();
+//						currentJob = jobs.poll();
+//						remainingJobs = jobs.size();
+//					}
+//				}
+//				
+//				Tuple<Double, String> result = currentJob.exp.runExperiment(currentJob.list);
+//				
+//				synchronized(results) {
+//					results.put(currentJob, result);
+//				}
+//			}
+//			
+//		}
+//
+//		@Override
+//		public String getStatus() {
+//			if(currentJob == null)
+//				return "";
+//			else
+//				return currentJob.exp.name() + " : " + currentJob.list.toString();
+//		}
+//
+//		@Override
+//		public String getTitle() {
+//			return remainingJobs + "/" + initialJobs;
+//		}
+//	}
 	
 	public void runExperiments()
 	{
@@ -112,11 +119,15 @@ public class ExperimentController {
 		
 		System.out.println("Running threads");
 		//run the threads
-		List<MultiThreadRunnable> threads = new ArrayList<MultiThreadRunnable>();
-		for(int i = 0; i < NUM_THREADS; i++)
-			threads.add(new JobProcessor());
-		MultiThreadRunner runner = new MultiThreadRunner(threads, NUM_THREADS);
-		runner.startThreads();
+		MultiJobRunner<Job, Tuple<Double, String>> runner = 
+				new MultiJobRunner<Job, Tuple<Double,String>>(new MultiJobRunner.JobProcessor<Job, Tuple<Double, String>>() {
+
+					@Override
+					public Tuple<Double, String> processJob(Job job) {
+						return job.exp.runExperiment(job.list);
+					}
+				}, NUM_THREADS);
+		results = runner.processJobs(jobs);
 		
 		System.out.println("Aggregating results");
 		//aggregate the results
