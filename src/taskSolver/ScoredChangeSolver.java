@@ -17,7 +17,7 @@ public class ScoredChangeSolver implements TaskSolver {
 	private static final boolean USE_ROWS = true;
 
 	@Override
-	public Map<MatrixEntry, Double> solveTask(MatrixCompletionTask task, List<ComparisonFunction> comparators) {
+	public Map<MatrixEntry, Double> solveTask(MatrixCompletionTask task, int numChoices, List<ComparisonFunction> comparators) {
 		//first compute the score for each comparator for rows and columns
 		List<List<MatrixEntry>> lists = new ArrayList<List<MatrixEntry>>();
 		for(int i = 0; i < task.getNumRows() - 1; i++)
@@ -72,7 +72,7 @@ public class ScoredChangeSolver implements TaskSolver {
 		}
 		
 		Map<MatrixEntry, Double> ret = new HashMap<MatrixEntry, Double>();
-		for(MatrixEntry obj : task.getChoices())
+		for(MatrixEntry obj : task.getChoicesForSize(numChoices))
 		{
 			double dis = computeDistanceFromExpectation(task, obj, rowScores, colScores, rowExpectedValues, colExpectedValues);
 			ret.put(obj, -dis);

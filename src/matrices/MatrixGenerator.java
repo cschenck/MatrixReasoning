@@ -185,7 +185,7 @@ public class MatrixGenerator {
 						}
 					}
 				}
-				Utility.debugPrintln("finished " + property);
+				Utility.debugPrintln("finished " + property + ", found " + this.validMatrices.get(property).size() + " valid configurations");
 			}
 		}
 

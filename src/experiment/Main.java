@@ -28,7 +28,6 @@ import matrices.patterns.OneSameOneDifferentPattern;
 import matrices.patterns.Pattern;
 import matrices.patterns.SamePattern;
 import matrices.patterns.XORMetaPattern;
-import taskSolver.comparisonFunctions.ComparisonFunction;
 import utility.Behavior;
 import utility.Context;
 import utility.Modality;
@@ -38,7 +37,6 @@ import utility.Utility;
 import experiment.scoredChangeExps.ScoredChangeExp;
 import experiment.scoredChangeExps.ScoredChangeExpClustering;
 import experiment.scoredChangeExps.ScoredChangeExpGDescentClustering;
-import experiment.scoredChangeExps.depricated.ScoredChangeExpWeightedClustering;
 import featureExtraction.FeatureExtractionManager;
 import featureExtraction.backgroundSubtraction.BackgroundSubtraction;
 
@@ -79,7 +77,7 @@ public class Main {
 //		ScoredChangeExpBoostedClustering exp = new ScoredChangeExpBoostedClustering(objectsFile);
 //		ScoredChangeExpGDescentClustering exp = 
 //				new ScoredChangeExpGDescentClustering(initializeObjects(objectsFile, new Random(1)), getAllContexts());
-//		System.out.println(exp.runExperiment(new ArrayList<Context>(getAllContexts())));
+//		System.out.println(exp.runExperiment(new ArrayList<Context>(getAllContexts()), Utility.convertToList(new Integer[]{5})));
 		
 		runExperiments();
 	}

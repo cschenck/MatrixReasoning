@@ -30,17 +30,10 @@ import matrices.patterns.Pattern;
 import matrices.patterns.SamePattern;
 import matrices.patterns.XORMetaPattern;
 import taskSolver.CachedScoredChangeSolver;
-import taskSolver.ScoredChangeSolver;
 import taskSolver.TaskSolver;
-import taskSolver.comparisonFunctions.CheatingComparator;
 import taskSolver.comparisonFunctions.ClusterDiffComparator;
 import taskSolver.comparisonFunctions.ComparisonFunction;
-import taskSolver.comparisonFunctions.WeightedComparisonFunction;
-import taskSolver.comparisonFunctions.DistanceComparator.DistanceFunction;
-import taskSolver.comparisonFunctions.DistanceComparatorLogisticsNormalization;
-import utility.Behavior;
 import utility.Context;
-import utility.Modality;
 import utility.Tuple;
 import utility.Utility;
 import experiment.Experiment;
@@ -50,7 +43,6 @@ import featureExtraction.FeatureExtractionManager;
 public class ScoredChangeExpGDescentClustering implements Experiment {
 	
 	private final static int NUM_TASKS = 500; 
-	private final static int NUM_CHOICES = 5;
 	private final static int NUM_FOLDS = 10;
 	private final static long RANDOM_SEED = 1;
 	private final static String TASK_CACHE_FILE = "cachedTasks.txt";
@@ -99,14 +91,18 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 		System.out.println("initialization complete");
 	}
 	
-	public Tuple<Double, String> runExperiment(List<Context> contexts)
+	public Map<Integer, Tuple<Double, String>> runExperiment(List<Context> contexts, List<Integer> numCandidateObjects)
 	{
-		List<String> output = new ArrayList<String>();
-		for(int i = 0; i < tasks.size(); i++)
-			output.add("");
+		Map<Integer, List<String>> output = new HashMap<Integer, List<String>>();
+		Map<Integer, Integer> correct = new HashMap<Integer, Integer>();
 		
-		int correct = 0;
-		int total = 0;
+		for(int i : numCandidateObjects)
+		{
+			correct.put(i, 0);
+			output.put(i, new ArrayList<String>());
+			for(int j = 0; j < tasks.size(); j++)
+				output.get(i).add("");
+		}
 		
 		List<ComparisonFunction> comparators = new ArrayList<ComparisonFunction>();
 		for(Context c : contexts)
@@ -114,127 +110,59 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 		
 		for(int fold = 0; fold < NUM_FOLDS; fold++)
 		{
-			List<ComparisonFunction> prunedComparators = prune(fold, comparators);
-			
-			for(int i = 0; i < tasks.size(); i++)
+			for(int numChoices : numCandidateObjects)
 			{
-				if(i % NUM_FOLDS != fold)
-					continue;
+				List<ComparisonFunction> prunedComparators = prune(fold, comparators, numChoices);
 				
-				MatrixCompletionTask task = tasks.get(i);
-			
-				Map<MatrixEntry, Double> results = solver.solveTask(task, prunedComparators);
-			
-				Entry<MatrixEntry, Double> max = null;
-				for(Entry<MatrixEntry, Double> e : results.entrySet())
+				for(int i = 0; i < tasks.size(); i++)
 				{
-					if(max == null || e.getValue() > max.getValue())
-						max = e;
+					if(i % NUM_FOLDS != fold)
+						continue;
+					
+					MatrixCompletionTask task = tasks.get(i);
+				
+					Map<MatrixEntry, Double> results = solver.solveTask(task, numChoices, prunedComparators);
+				
+				
+					MatrixEntry max = null;
+					for(MatrixEntry obj : task.getChoicesForSize(numChoices))
+					{
+						if(max == null || results.get(obj).doubleValue() > results.get(max).doubleValue())
+							max = obj;
+					}
+					
+					if(task.isCorrect(max))
+						correct.put(numChoices, correct.get(numChoices) + 1);
+					
+					String out = "<";
+					if(!task.isCorrect(max))
+						out += "INCORRECT,";
+					else
+						out += "CORRECT,";
+					out += max.getName() + ">";
+					output.get(numChoices).set(i, out);
 				}
-				
-				total++;
-				if(task.isCorrect(max.getKey()))
-					correct++;
-				
-				String out = "<";
-				if(!task.isCorrect(max.getKey()))
-				{
-					out += "INCORRECT,";
-				}
-				else
-					out += "CORRECT,";
-				out += max.getKey().getName() + ">";
-				
-				output.set(i, out);
 			}
 		}
 		
-		Tuple<Double, String> ret = new Tuple<Double, String>((double)1.0*correct/total, output.toString());
+		Map<Integer, Tuple<Double, String>> ret = new HashMap<Integer, Tuple<Double,String>>();
+		for(int numChoices : numCandidateObjects)
+			ret.put(numChoices, new Tuple<Double, String>((double)1.0*correct.get(numChoices)/tasks.size(), 
+					output.get(numChoices).toString()));
 		return ret;
 	}
 	
-//	public void runExperiment(String logfile)
-//	{
-//		FileWriter fw = null;
-//		try {
-//			fw = new FileWriter(logfile);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		
-//		int correct = 0;
-//		int total = 0;
-//		int progress = 0;
-//		
-//		for(int fold = 0; fold < NUM_FOLDS; fold++)
-//		{
-//			System.out.println("Training weights for fold " + fold);
-//			Map<ComparisonFunction, Double> weights = trainWeights(fold);
-//			List<ComparisonFunction> weightedComparators = new ArrayList<ComparisonFunction>();
-//			for(Entry<ComparisonFunction, Double> e : weights.entrySet())
-//				weightedComparators.add(new WeightedComparisonFunction(e.getKey(), e.getValue()));
-//			
-//			for(int i = 0; i < tasks.size(); i++)
-//			{
-//				if(i % NUM_FOLDS != fold)
-//					continue;
-//				
-//				MatrixCompletionTask task = tasks.get(i);
-//				
-//				Map<MatrixEntry, Double> results = solver.solveTask(task, weightedComparators);
-//				
-//				Entry<MatrixEntry, Double> max = null;
-//				for(Entry<MatrixEntry, Double> e : results.entrySet())
-//				{
-//					if(max == null || e.getValue() > max.getValue())
-//						max = e;
-//				}
-//				
-//				total++;
-//				if(task.isCorrect(max.getKey()))
-//					correct++;
-//				
-//				try {
-//					if(!task.isCorrect(max.getKey()))
-//						fw.write("############## WRONG #################\n");
-//					fw.write(task.toString() + "\n");
-//					MatrixEntry correctChoice = null;
-//					for(Entry<MatrixEntry, Double> e : results.entrySet())
-//					{
-//						fw.write(e.getKey().toString() + ":" + (100*e.getValue()) + "%\n");
-//						if(task.isCorrect(e.getKey()))
-//							correctChoice = e.getKey();
-//					}
-//					fw.write("Correct = " + correctChoice.toString() + "\n");
-//					fw.write("==================================================================\n");
-//					fw.flush();
-//					
-//				} catch (IOException e1) {
-//					e1.printStackTrace();
-//				}
-//				
-//				progress++;
-//				System.out.println("Completed " + progress + " out of " + NUM_TASKS);
-//			}
-//		}
-//		
-//		System.out.println("correct  =" + correct);
-//		System.out.println("incorrect=" + (total - correct));
-//		System.out.println("total    =" + total);
-//		
-//		try {
-//			fw.write("correct  =" + correct + "\n");
-//			fw.write("incorrect=" + (total - correct) + "\n");
-//			fw.write("total    =" + total + "\n");
-//			fw.flush();
-//			fw.close();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//	}
-	
-	private List<ComparisonFunction> prune(int testFold, List<ComparisonFunction> comparators)
+
+	private Map<Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>>, List<ComparisonFunction>> cache = 
+			new ConcurrentHashMap<Tuple<List<ComparisonFunction>,Tuple<Integer,Integer>>, List<ComparisonFunction>>(8);
+	private List<ComparisonFunction> prune(int testFold, List<ComparisonFunction> comparators, int numChoices)
 	{		
+		Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>> key = 
+				new Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>>(
+						comparators, new Tuple<Integer, Integer>(testFold, numChoices));
+		if(cache.containsKey(key))
+			return cache.get(key);
+		
 		Map<List<ComparisonFunction>, Double> bestSetPerformance = new HashMap<List<ComparisonFunction>, Double>();
 		List<ComparisonFunction> bestSet = new ArrayList<ComparisonFunction>(comparators);
 		Collections.sort(bestSet, new Comparator<ComparisonFunction>() {
@@ -243,7 +171,7 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 				return o1.toString().compareTo(o2.toString());
 			}
 		});
-		bestSetPerformance.put(bestSet, computeAccuracy(testFold, bestSet));
+		bestSetPerformance.put(bestSet, computeAccuracy(testFold, bestSet, numChoices));
 		
 		/*
 		 * Perform gradient decent. Start with all the comparison functions (cf's) in use and
@@ -262,7 +190,7 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 			{
 				List<ComparisonFunction> temp = new ArrayList<ComparisonFunction>(bestSet);
 				temp.remove(cf);
-				double accuracy = computeAccuracy(testFold, temp);
+				double accuracy = computeAccuracy(testFold, temp, numChoices);
 				
 				if(accuracy >= bestPerformanceSoFar)
 				{
@@ -273,6 +201,22 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 			
 			bestSetPerformance.put(bestSoFar, bestPerformanceSoFar);
 			bestSet = bestSoFar;
+			
+			Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>> bestKey = 
+					new Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>>(
+							bestSet, new Tuple<Integer, Integer>(testFold, numChoices));
+			if(cache.containsKey(bestKey))
+			{
+				List<ComparisonFunction> ret = cache.get(bestKey);
+				for(List<ComparisonFunction> set : bestSetPerformance.keySet())
+				{
+					Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>> setKey = 
+							new Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>>(
+									set, new Tuple<Integer, Integer>(testFold, numChoices));
+					cache.put(setKey, ret);
+				}
+				return ret;
+			}
 			
 		}
 		
@@ -306,16 +250,18 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 				ret.add(cf);
 		}
 		
+		for(List<ComparisonFunction> set : bestSetPerformance.keySet())
+		{
+			Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>> setKey = 
+					new Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>>(
+							set, new Tuple<Integer, Integer>(testFold, numChoices));
+			cache.put(setKey, ret);
+		}
 		return ret;
 	}
 
-	//this is to cache the accuracies for faster lookup, the array is to reduce collisions
-	//java wouldn't let me create an array with a generic type, so I had to leave off the generic
-	@SuppressWarnings("rawtypes")
-//	private Map[] cachedAccuracies = new Map[ExperimentController.NUM_THREADS*100];
-	private Map<Tuple<List<ComparisonFunction>, Integer>, Double> cachedAccuracies = new ConcurrentHashMap<Tuple<List<ComparisonFunction>,Integer>, Double>();
-	@SuppressWarnings("unchecked")
-	private double computeAccuracy(int testFold, List<ComparisonFunction> temp) {
+	
+	private double computeAccuracy(int testFold, List<ComparisonFunction> temp, int numChoices) {
 		//first lets see if this value is cached
 //		Tuple<List<ComparisonFunction>, Integer> pair = new Tuple<List<ComparisonFunction>, Integer>(temp, testFold);
 //		if(cachedAccuracies.containsKey(pair))
@@ -340,18 +286,17 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 			
 			MatrixCompletionTask task = tasks.get(i);
 			
-			
-			Map<MatrixEntry, Double> results = solver.solveTask(task, temp);
-			
-			Entry<MatrixEntry, Double> max = null;
-			for(Entry<MatrixEntry, Double> e : results.entrySet())
-			{
-				if(max == null || e.getValue() > max.getValue())
-					max = e;
-			}
+			Map<MatrixEntry, Double> results = solver.solveTask(task, numChoices, temp);
 			
 			total++;
-			if(task.isCorrect(max.getKey()))
+			MatrixEntry max = null;
+			for(MatrixEntry obj : task.getChoicesForSize(numChoices))
+			{
+				if(max == null || results.get(obj).doubleValue() > results.get(max).doubleValue())
+					max = obj;
+			}
+			
+			if(task.isCorrect(max))
 				correct++;
 		}
 		double accuracy = (double)1.0*correct/total;
@@ -484,7 +429,7 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 		{
 			List<MatrixEntry> choices = new ArrayList<MatrixEntry>();
 			choices.add(m.getEntry(m.getNumRows() - 1, m.getNumCols() - 1));
-			while(choices.size() < NUM_CHOICES)
+			while(choices.size() < ExperimentController.NUM_CHOICES)
 			{
 				MatrixEntry choice = objects.get(rand.nextInt(objects.size()));
 				//make sure we don't have any repeates or objects that are in the matrix

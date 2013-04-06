@@ -90,12 +90,17 @@ public class ScoredChangeExp implements Experiment {
 		System.out.println("initialization complete");
 	}
 	
-	public Tuple<Double, String> runExperiment(List<Context> contexts)
+	public Map<Integer, Tuple<Double, String>> runExperiment(List<Context> contexts, List<Integer> numCandidateObjects)
 	{
-		StringBuilder output = new StringBuilder("");
-		
-		int correct = 0;
+		Map<Integer, StringBuilder> output = new HashMap<Integer, StringBuilder>();
+		Map<Integer, Integer> correct = new HashMap<Integer, Integer>();
 		int total = 0;
+		
+		for(int i : numCandidateObjects)
+		{
+			output.put(i, new StringBuilder(""));
+			correct.put(i, 0);
+		}
 		
 		List<ComparisonFunction> comparators = new ArrayList<ComparisonFunction>();
 		for(Context c : contexts)
@@ -103,28 +108,34 @@ public class ScoredChangeExp implements Experiment {
 		
 		for(MatrixCompletionTask task : tasks)
 		{
-			Map<MatrixEntry, Double> results = solver.solveTask(task, comparators);
-			
-			Entry<MatrixEntry, Double> max = null;
-			for(Entry<MatrixEntry, Double> e : results.entrySet())
-			{
-				if(max == null || e.getValue() > max.getValue())
-					max = e;
-			}
+			Map<MatrixEntry, Double> results = solver.solveTask(task, task.getMaxNumChoices(), comparators);
 			
 			total++;
-			if(task.isCorrect(max.getKey()))
-				correct++;
-			
-			output.append("<");
-			if(!task.isCorrect(max.getKey()))
-				output.append("INCORRECT,");
-			else
-				output.append("CORRECT,");
-			output.append(max.getKey().getName() + ">,");
+			for(int numChoices : numCandidateObjects)
+			{
+				MatrixEntry max = null;
+				for(MatrixEntry obj : task.getChoicesForSize(numChoices))
+				{
+					if(max == null || results.get(obj).doubleValue() > results.get(max).doubleValue())
+						max = obj;
+				}
+				
+				if(task.isCorrect(max))
+					correct.put(numChoices, correct.get(numChoices) + 1);
+				
+				StringBuilder out = output.get(numChoices);
+				out.append("<");
+				if(!task.isCorrect(max))
+					out.append("INCORRECT,");
+				else
+					out.append("CORRECT,");
+				out.append(max.getName() + ">,");
+			}
 		}
 		
-		Tuple<Double, String> ret = new Tuple<Double, String>((double)1.0*correct/total, output.toString());
+		Map<Integer, Tuple<Double, String>> ret = new HashMap<Integer, Tuple<Double,String>>();
+		for(int numChoices : numCandidateObjects)
+			ret.put(numChoices, new Tuple<Double, String>((double)1.0*correct.get(numChoices)/total, output.get(numChoices).toString()));
 		return ret;
 	}
 	

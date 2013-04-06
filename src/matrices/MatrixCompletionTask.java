@@ -13,17 +13,26 @@ public class MatrixCompletionTask {
 	
 	private Matrix matrix;
 	private MatrixEntry correctAnswer;
-	private List<MatrixEntry> possibleAnswers;
+	private Map<Integer, List<MatrixEntry>> possibleAnswers;
+	private int maxNumChoices;
 	
 	public MatrixCompletionTask(Matrix matrix, MatrixEntry correctAnswer, List<MatrixEntry> possibleAnswers, Random rand)
 	{
 		this.matrix = matrix;
 		this.correctAnswer = correctAnswer;
-		this.possibleAnswers = new ArrayList<MatrixEntry>(possibleAnswers);
+		this.possibleAnswers = new HashMap<Integer, List<MatrixEntry>>();
 		
-		if(!this.possibleAnswers.contains(correctAnswer))
-			this.possibleAnswers.add(correctAnswer);
-		this.possibleAnswers = Utility.randomizeOrder(this.possibleAnswers, rand);
+		List<MatrixEntry> allAnswers = new ArrayList<MatrixEntry>(possibleAnswers);
+		if(allAnswers.contains(correctAnswer))
+			allAnswers.remove(correctAnswer);
+		this.maxNumChoices = allAnswers.size() + 1;
+		
+		for(int i = 1; i <= allAnswers.size(); i++)
+		{
+			List<MatrixEntry> choices = Utility.createRandomListsOfSize(allAnswers, i, 1, false, rand).get(0);
+			choices.add(correctAnswer);
+			this.possibleAnswers.put(i+1, Utility.randomizeOrder(choices, rand));
+		}
 	}
 	
 	public int getNumRows()
@@ -34,6 +43,11 @@ public class MatrixCompletionTask {
 	public int getNumCols()
 	{
 		return matrix.getNumCols();
+	}
+	
+	public int getMaxNumChoices()
+	{
+		return this.maxNumChoices;
 	}
 	
 	public List<MatrixEntry> getRow(int i)
@@ -54,7 +68,12 @@ public class MatrixCompletionTask {
 	
 	public List<MatrixEntry> getChoices()
 	{
-		List<MatrixEntry> ret = new ArrayList<MatrixEntry>(possibleAnswers);
+		return this.getChoicesForSize(this.maxNumChoices);
+	}
+	
+	public List<MatrixEntry> getChoicesForSize(int size)
+	{
+		List<MatrixEntry> ret = new ArrayList<MatrixEntry>(possibleAnswers.get(size));
 		if(!ret.contains(correctAnswer))
 			ret.add(correctAnswer);
 		
@@ -120,7 +139,7 @@ public class MatrixCompletionTask {
 				ret += "," + matrix.getEntry(i, j).getName();
 		}
 		
-		for(MatrixEntry obj : possibleAnswers)
+		for(MatrixEntry obj : this.getChoices())
 			ret += "," + obj.getName();
 		
 		return ret;

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import matrices.MatrixCompletionTask;
 import matrices.MatrixEntry;
@@ -14,7 +15,7 @@ import utility.Utility;
 public class CachedScoredChangeSolver implements TaskSolver {
 	
 	private ScoredChangeSolver solver;
-	public Map<ComparisonFunction, Map<MatrixCompletionTask, Map<MatrixEntry, Double>>> cache;
+	private Map<ComparisonFunction, Map<MatrixCompletionTask, Map<MatrixEntry, Double>>> cache;
 	
 	public CachedScoredChangeSolver(List<MatrixCompletionTask> tasks, 
 			Set<ComparisonFunction> functions)
@@ -30,21 +31,21 @@ public class CachedScoredChangeSolver implements TaskSolver {
 			{
 				List<ComparisonFunction> temp = new ArrayList<ComparisonFunction>();
 				temp.add(cf);
-				Map<MatrixEntry, Double> temp2 = solver.solveTask(task, temp);
-				this.cache.get(cf).put(task, solver.solveTask(task, temp));
+				this.cache.get(cf).put(task, solver.solveTask(task, task.getMaxNumChoices(), temp));
 			}
 		}
+		
 		Utility.debugPrintln("done computing cache");
 	}
 
 	@Override
-	public Map<MatrixEntry, Double> solveTask(MatrixCompletionTask task,
+	public Map<MatrixEntry, Double> solveTask(MatrixCompletionTask task, int numChoices,
 			List<ComparisonFunction> comparators) {
 		
 		Map<MatrixEntry, Double> ret = new HashMap<MatrixEntry, Double>();
 		for(ComparisonFunction cf : comparators)
 		{
-			for(MatrixEntry obj : this.cache.get(cf).get(task).keySet())
+			for(MatrixEntry obj : task.getChoicesForSize(numChoices))
 			{
 				if(ret.get(obj) == null)
 					ret.put(obj, this.cache.get(cf).get(task).get(obj));
@@ -52,6 +53,7 @@ public class CachedScoredChangeSolver implements TaskSolver {
 					ret.put(obj, ret.get(obj).doubleValue() + this.cache.get(cf).get(task).get(obj).doubleValue());
 			}
 		}
+		
 		
 		return ret;
 	}

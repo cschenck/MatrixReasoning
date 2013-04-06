@@ -19,6 +19,6 @@ public interface TaskSolver {
 	 * @param comparators the comparison functions to use to solve the task
 	 * @return a probability distribution over the choices for the task
 	 */
-	public Map<MatrixEntry, Double> solveTask(MatrixCompletionTask task, List<ComparisonFunction> comparators);
+	public Map<MatrixEntry, Double> solveTask(MatrixCompletionTask task, int numChoices, List<ComparisonFunction> comparators);
 
 }

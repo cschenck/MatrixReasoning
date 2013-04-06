@@ -29,6 +29,7 @@ public class ExperimentController {
 	
 	private static final int NUM_SAMPLES = 200;
 	public static final int NUM_THREADS = 8;
+	public final static int NUM_CHOICES = 10;
 	private static final String RESULTS_PATH = "results";
 	
 	private List<Experiment> exps;
@@ -37,7 +38,7 @@ public class ExperimentController {
 	
 	private Queue<Job> jobs;
 	
-	private Map<Job, Tuple<Double, String>> results;
+	private Map<Job, Map<Integer, Tuple<Double, String>>> results;
 	
 	public ExperimentController(List<Experiment> exps, Set<Context> allContexts, Random rand)
 	{
@@ -113,21 +114,27 @@ public class ExperimentController {
 	
 	public void runExperiments()
 	{
+		long startTime = System.currentTimeMillis();
 		System.out.println("Building job queue");
 		//add all the jobs to the queue
 		buildQueue();
 		
 		System.out.println("Running threads");
+		final List<Integer> numChoices = new ArrayList<Integer>();
+		for(int i = 2; i <= ExperimentController.NUM_CHOICES; i++)
+			numChoices.add(i);
+//		numChoices.add(5);
 		//run the threads
-		MultiJobRunner<Job, Tuple<Double, String>> runner = 
-				new MultiJobRunner<Job, Tuple<Double,String>>(new MultiJobRunner.JobProcessor<Job, Tuple<Double, String>>() {
-
-					@Override
-					public Tuple<Double, String> processJob(Job job) {
-						return job.exp.runExperiment(job.list);
-					}
-				}, NUM_THREADS);
-		results = runner.processJobs(jobs);
+		MultiJobRunner<Job, Map<Integer, Tuple<Double, String>>> runner = 
+				new MultiJobRunner<Job, Map<Integer, Tuple<Double,String>>>(
+					new MultiJobRunner.JobProcessor<Job, Map<Integer, Tuple<Double, String>>>() {
+	
+						@Override
+						public Map<Integer, Tuple<Double, String>> processJob(Job job) {
+							return job.exp.runExperiment(job.list, numChoices);
+						}
+					}, NUM_THREADS);
+			results = runner.processJobs(jobs);
 		
 		System.out.println("Aggregating results");
 		//aggregate the results
@@ -136,66 +143,95 @@ public class ExperimentController {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+		
+		long processTime = System.currentTimeMillis() - startTime;
+		long estHours = processTime/3600000;
+		long estMins = (processTime % 3600000)/60000;
+		long estSecs = ((processTime % 3600000) % 60000)/1000;
+		
+		String time = "";
+		if(estHours > 0)
+			time += estHours + " hours, ";
+		if(estMins > 0)
+			time += estMins + " minutes, ";
+		time += estSecs + " seconds.";
+		System.out.println("Took " + time);
 	}
 	
 	private void aggregateResults() throws IOException
 	{
 		//first divide up the results by experiment
-		Map<Experiment, Map<List<Context>, Tuple<Double, String>>> expRes = new HashMap<Experiment, Map<List<Context>,Tuple<Double,String>>>();
-		for(Entry<Job, Tuple<Double, String>> e : results.entrySet())
+		Map<Experiment, Map<List<Context>, Map<Integer, Tuple<Double, String>>>> expRes = 
+				new HashMap<Experiment, Map<List<Context>,Map<Integer,Tuple<Double,String>>>>();
+		for(Entry<Job, Map<Integer,Tuple<Double, String>>> e : results.entrySet())
 		{
 			if(expRes.get(e.getKey().exp) == null)
-				expRes.put(e.getKey().exp, new HashMap<List<Context>, Tuple<Double,String>>());
+				expRes.put(e.getKey().exp, new HashMap<List<Context>, Map<Integer,Tuple<Double,String>>>());
 			expRes.get(e.getKey().exp).put(e.getKey().list, e.getValue());
 		}
 		
 		//now go over each experiment and save the results to a file
-		Map<Experiment, List<RunningMean>> expMeans = new HashMap<Experiment, List<RunningMean>>();
 		for(Experiment exp : expRes.keySet())
 		{
-			List<RunningMean> means = new ArrayList<RunningMean>();
-			for(int i = 1; i <= getContexts().size(); i++)
-				means.add(new RunningMean());
-			
+			Map<Integer, List<RunningMean>> expMeans = new HashMap<Integer, List<RunningMean>>();
 			FileWriter fw = new FileWriter(RESULTS_PATH + "/" + exp.name() + "_dump.txt");
-			for(Entry<List<Context>, Tuple<Double, String>> e : expRes.get(exp).entrySet())
+			for(int numCandidates = 2; numCandidates <= NUM_CHOICES; numCandidates++)
 			{
-				//dump the raw results into a file
-				fw.write(e.getKey().toString() + " = " + e.getValue().a + " = " + e.getValue().b + "\n");
-				fw.flush();
+				List<RunningMean> means = new ArrayList<RunningMean>();
+				for(int i = 1; i <= getContexts().size(); i++)
+					means.add(new RunningMean());
 				
-				//aggregate the results as well
-				means.get(e.getKey().size() - 1).addValue(e.getValue().a);
+				for(Entry<List<Context>, Map<Integer,Tuple<Double, String>>> e : expRes.get(exp).entrySet())
+				{
+					//dump the raw results into a file
+					fw.write(e.getKey().toString() + " = " + e.getValue().get(numCandidates).a + " = " 
+							+ e.getValue().get(numCandidates).b + "\n");
+					fw.flush();
+					
+					//aggregate the results as well
+					means.get(e.getKey().size() - 1).addValue(e.getValue().get(numCandidates).a);
+				}
+				expMeans.put(numCandidates, means);
 			}
 			
 			fw.close();
-			expMeans.put(exp, means);
-		}
 		
-		//now lets save the means to a file
-		List<String> rowHeaders = new ArrayList<String>();
-		List<String> columnHeaders = new ArrayList<String>();
-		for(Experiment exp : this.exps)
-			columnHeaders.add(exp.name());
-		for(int i = 1; i <= getContexts().size(); i++)
-			rowHeaders.add(i + "");
 		
-		double[][] data = new double[getContexts().size()][exps.size()];
-		for(int i = 0; i < getContexts().size(); i++)
-		{
-			for(int j = 0; j < exps.size(); j++)
-				data[i][j] = expMeans.get(exps.get(j)).get(i).getMean();
-		}
+			//now lets save the means to a file
+			List<String> rowHeaders = new ArrayList<String>();
+			List<String> columnHeaders = new ArrayList<String>();
+			for(Integer num : expMeans.keySet())
+				columnHeaders.add(num.toString());
+			for(int i = 1; i <= getContexts().size(); i++)
+				rowHeaders.add(i + "");
 			
-		PrintStream fos = new PrintStream(new FileOutputStream(RESULTS_PATH + "/average_per_num_contexts.txt"));
-		PrintStream temp = System.out;
-		System.setOut(fos); //this is a hack because I, for some reason, made the print table function go to sysout
-		Utility.printTable(columnHeaders, rowHeaders, data, false);
-		fos.close();
-		System.setOut(temp);
-		
-		//now we'll also print it out to standard out
-		Utility.printTable(columnHeaders, rowHeaders, data, false);
+			double[][] data = new double[getContexts().size()][expMeans.keySet().size()];
+			double[][] dataStddev = new double[getContexts().size()][expMeans.keySet().size()];
+			for(int i = 0; i < getContexts().size(); i++)
+			{
+				for(int j = 0; j < expMeans.keySet().size(); j++)
+				{
+					data[i][j] = expMeans.get(j + 2).get(i).getMean();
+					dataStddev[i][j] = expMeans.get(j + 2).get(i).getStandardDeviation();
+				}
+			}
+				
+			PrintStream fos = new PrintStream(new FileOutputStream(RESULTS_PATH + "/" + exp.name() + "_averages.txt"));
+			PrintStream fosStddev = new PrintStream(new FileOutputStream(RESULTS_PATH + "/" + exp.name() + "_stddevs.txt"));
+			PrintStream temp = System.out;
+			System.setOut(fos); //this is a hack because I, for some reason, made the print table function go to sysout
+			Utility.printTable(columnHeaders, rowHeaders, data, false);
+			System.setOut(fosStddev);
+			Utility.printTable(columnHeaders, rowHeaders, dataStddev, false);
+			fos.close();
+			fosStddev.close();
+			System.setOut(temp);
+			
+			//now we'll also print it out to standard out
+			System.out.println("=============================" + exp.name() + "===============================");
+			Utility.printTable(columnHeaders, rowHeaders, data, false);
+			System.out.println();
+		}
 	}
 
 	private void buildQueue() {
