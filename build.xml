@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file.
+              Any modifications will be overwritten.
+              To include a user specific buildfile here, simply create one in the same
+              directory with the processing instruction <?eclipse.ant.import?>
+              as the first entry and export the buildfile again. --><project basedir="." default="build" name="MatrixReasoning">
+    <property environment="env"/>
+    <property name="ECLIPSE_HOME" value="../../Program Files/Programs/eclipse"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.6"/>
+    <property name="source" value="1.6"/>
+    <path id="MatrixReasoning.classpath">
+        <pathelement location="bin"/>
+        <pathelement location="statDistros.jar"/>
+        <pathelement location="commons-math3-3.1.1.jar"/>
+        <pathelement location="weka.jar"/>
+        <pathelement location="jgap.jar"/>
+        <pathelement location="colt.jar"/>
+        <pathelement location="concurrent.jar"/>
+    </path>
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+                <exclude name="taskSolver/patternClassifiers/PropertyPatternClassifier.java"/>
+                <exclude name="testingStuff/PatternClassificationTest.java"/>
+                <exclude name="experiment/comparisonFunctionExps/MatrixCompletionExperiment.java"/>
+                <exclude name="experiment/comparisonFunctionExps/MatrixCompletionExperimentAdaBoost.java"/>
+                <exclude name="experiment/comparisonFunctionExps/MatrixCompletionExperimentClassification.java"/>
+                <exclude name="experiment/comparisonFunctionExps/MatrixCompletionExperimentClassificationDiff.java"/>
+                <exclude name="experiment/comparisonFunctionExps/MatrixCompletionExperimentClassificationDiffAdaBoost.java"/>
+                <exclude name="experiment/comparisonFunctionExps/MatrixCompletionExperimentGeneticAlgorithm.java"/>
+                <exclude name="experiment/patternClassificationExps/PatternClassificationExp.java"/>
+                <exclude name="taskSolver/GaussianSolver.java"/>
+                <exclude name="experiment/scoredChangeExps/depricated/"/>
+                <exclude name="taskSolver/WeightedGaussianSolver.java"/>
+                <exclude name="testingStuff/ClusterWeightingTest.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+    <target depends="clean" name="cleanall"/>
+    <target depends="build-subprojects,build-project" name="build"/>
+    <target name="build-subprojects"/>
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
+            <src path="src"/>
+            <exclude name="taskSolver/patternClassifiers/PropertyPatternClassifier.java"/>
+            <exclude name="testingStuff/PatternClassificationTest.java"/>
+            <exclude name="experiment/comparisonFunctionExps/MatrixCompletionExperiment.java"/>
+            <exclude name="experiment/comparisonFunctionExps/MatrixCompletionExperimentAdaBoost.java"/>
+            <exclude name="experiment/comparisonFunctionExps/MatrixCompletionExperimentClassification.java"/>
+            <exclude name="experiment/comparisonFunctionExps/MatrixCompletionExperimentClassificationDiff.java"/>
+            <exclude name="experiment/comparisonFunctionExps/MatrixCompletionExperimentClassificationDiffAdaBoost.java"/>
+            <exclude name="experiment/comparisonFunctionExps/MatrixCompletionExperimentGeneticAlgorithm.java"/>
+            <exclude name="experiment/patternClassificationExps/PatternClassificationExp.java"/>
+            <exclude name="taskSolver/GaussianSolver.java"/>
+            <exclude name="experiment/scoredChangeExps/depricated/"/>
+            <exclude name="taskSolver/WeightedGaussianSolver.java"/>
+            <exclude name="testingStuff/ClusterWeightingTest.java"/>
+            <classpath refid="MatrixReasoning.classpath"/>
+        </javac>
+    </target>
+    <target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
+    <target description="copy Eclipse compiler jars to ant lib directory" name="init-eclipse-compiler">
+        <copy todir="${ant.library.dir}">
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </copy>
+        <unzip dest="${ant.library.dir}">
+            <patternset includes="jdtCompilerAdapter.jar"/>
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </unzip>
+    </target>
+    <target description="compile project with Eclipse compiler" name="build-eclipse-compiler">
+        <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
+        <antcall target="build"/>
+    </target>
+    <target name="ColorClassification">
+        <java classname="testingStuff.ColorClassification" failonerror="true" fork="yes">
+            <classpath refid="MatrixReasoning.classpath"/>
+        </java>
+    </target>
+    <target name="ColorClustering">
+        <java classname="testingStuff.ColorClustering" failonerror="true" fork="yes">
+            <classpath refid="MatrixReasoning.classpath"/>
+        </java>
+    </target>
+    <target name="Main_">
+        <java classname="experiment.Main" failonerror="true" fork="yes">
+            <jvmarg line="-Xmx2048m"/>
+            <classpath refid="MatrixReasoning.classpath"/>
+        </java>
+    </target>
+</project>
