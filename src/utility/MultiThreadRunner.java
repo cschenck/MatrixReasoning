@@ -54,9 +54,11 @@ public class MultiThreadRunner {
 	private Thread myThread;
 	private boolean going = false;
 	private int maxConcurrentThreads;
+	private boolean enableStatusWindow;
 	
-	public MultiThreadRunner(List<MultiThreadRunnable> runnable, int maxConcurrentThreads)
+	public MultiThreadRunner(List<MultiThreadRunnable> runnable, int maxConcurrentThreads, boolean enableStatusWindow)
 	{
+		this.enableStatusWindow = enableStatusWindow;
 		status = new generatorStatus();
 		this.maxConcurrentThreads = maxConcurrentThreads;
 		
@@ -65,6 +67,11 @@ public class MultiThreadRunner {
 		{
 			running.add(new MultiThreadRunnableWrapper(r, new Thread(r), status.addStatus()));
 		}
+	}
+	
+	public MultiThreadRunner(List<MultiThreadRunnable> runnable, int maxConcurrentThreads)
+	{
+		this(runnable, maxConcurrentThreads, true);
 	}
 	
 	public void startThreads()
@@ -150,29 +157,35 @@ public class MultiThreadRunner {
 		
 		private List<String> statuses = new ArrayList<String>();
 		private List<JLabel> labels = new ArrayList<JLabel>();
-		private JPanel panel;
-		private JFrame frame;
+		private JPanel panel = null;
+		private JFrame frame = null;
 		
 		public generatorStatus() {
-			panel = new JPanel();
-			panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-			
-			frame = new JFrame("Running Threads");
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setContentPane(panel);
-			frame.setVisible(true);
+			if(enableStatusWindow)
+			{
+				panel = new JPanel();
+				panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+				
+				frame = new JFrame("Running Threads");
+				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+				frame.setContentPane(panel);
+				frame.setVisible(true);
+			}
 		}
 		
 		public int addStatus() {
 			synchronized(this)
 			{
 				statuses.add("");
-				JLabel l = new JLabel("");
-				labels.add(l);
-				panel.add(l);
-				panel.validate();
-				panel.updateUI();
-				frame.pack();
+				if(enableStatusWindow)
+				{
+					JLabel l = new JLabel("");
+					labels.add(l);
+					panel.add(l);
+					panel.validate();
+					panel.updateUI();
+					frame.pack();
+				}
 				return statuses.size() - 1;
 			}
 		}
@@ -181,10 +194,13 @@ public class MultiThreadRunner {
 		{
 			synchronized(this) {
 				statuses.set(index, newStatus);
-				labels.get(index).setText(newStatus);
-				panel.validate();
-				panel.updateUI();
-				frame.pack();
+				if(enableStatusWindow)
+				{
+					labels.get(index).setText(newStatus);
+					panel.validate();
+					panel.updateUI();
+					frame.pack();
+				}
 			}
 		}
 		
@@ -195,7 +211,8 @@ public class MultiThreadRunner {
 		}
 		
 		public void dispose() {
-			frame.dispose();
+			if(enableStatusWindow)
+				frame.dispose();
 		}
 		
 	}

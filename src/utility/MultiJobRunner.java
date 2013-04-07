@@ -17,11 +17,18 @@ public class MultiJobRunner<J,R> {
 	
 	private JobProcessor<J, R> processor;
 	private int numThreads;
+	private boolean enableStatusWindow;
 	
-	public MultiJobRunner(JobProcessor<J,R> jobProcessor, int numThreads)
+	public MultiJobRunner(JobProcessor<J,R> jobProcessor, int numThreads, boolean enableStatusWindow)
 	{
 		this.processor = jobProcessor;
 		this.numThreads = numThreads;
+		this.enableStatusWindow = enableStatusWindow;
+	}
+	
+	public MultiJobRunner(JobProcessor<J,R> jobProcessor, int numThreads)
+	{
+		this(jobProcessor, numThreads, true);
 	}
 	
 	public Map<J, R> processJobs(final Queue<J> jobs)
@@ -116,7 +123,10 @@ public class MultiJobRunner<J,R> {
 					time += estSecs + " seconds.";
 					
 					status = time;
+					
+					System.out.print(currentSize + "/" + startSize + ", est. time remaining: " + status + "\r");
 				}
+				System.out.println("Done");
 			}
 			
 			@Override

@@ -28,6 +28,7 @@ import matrices.patterns.OneSameOneDifferentPattern;
 import matrices.patterns.Pattern;
 import matrices.patterns.SamePattern;
 import matrices.patterns.XORMetaPattern;
+import taskSolver.ScoredChangeSolver;
 import utility.Behavior;
 import utility.Context;
 import utility.Modality;
@@ -79,6 +80,19 @@ public class Main {
 //				new ScoredChangeExpGDescentClustering(initializeObjects(objectsFile, new Random(1)), getAllContexts());
 //		System.out.println(exp.runExperiment(new ArrayList<Context>(getAllContexts()), Utility.convertToList(new Integer[]{5})));
 		
+		//test rows and cols
+		ScoredChangeSolver.USE_COLUMNS = true;
+		ScoredChangeSolver.USE_ROWS = true;
+		runExperiments();
+		
+		//test rows only
+		ScoredChangeSolver.USE_COLUMNS = false;
+		ScoredChangeSolver.USE_ROWS = true;
+		runExperiments();
+		
+		//test cols only
+		ScoredChangeSolver.USE_COLUMNS = true;
+		ScoredChangeSolver.USE_ROWS = false;
 		runExperiments();
 	}
 	

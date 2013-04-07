@@ -15,6 +15,7 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 
+import taskSolver.ScoredChangeSolver;
 import utility.Behavior;
 import utility.Context;
 import utility.Modality;
@@ -27,8 +28,8 @@ import utility.Utility;
 
 public class ExperimentController {
 	
-	private static final int NUM_SAMPLES = 200;
-	public static final int NUM_THREADS = 24;
+	private static final int NUM_SAMPLES = 1;
+	public static final int NUM_THREADS = 4;
 	public final static int NUM_CHOICES = 10;
 	private static final String RESULTS_PATH = "results";
 	
@@ -133,8 +134,8 @@ public class ExperimentController {
 						public Map<Integer, Tuple<Double, String>> processJob(Job job) {
 							return job.exp.runExperiment(job.list, numChoices);
 						}
-					}, NUM_THREADS);
-			results = runner.processJobs(jobs);
+					}, NUM_THREADS, false);
+		results = runner.processJobs(jobs);
 		
 		System.out.println("Aggregating results");
 		//aggregate the results
@@ -215,9 +216,17 @@ public class ExperimentController {
 					dataStddev[i][j] = expMeans.get(j + 2).get(i).getStandardDeviation();
 				}
 			}
-				
-			PrintStream fos = new PrintStream(new FileOutputStream(RESULTS_PATH + "/" + exp.name() + "_averages.txt"));
-			PrintStream fosStddev = new PrintStream(new FileOutputStream(RESULTS_PATH + "/" + exp.name() + "_stddevs.txt"));
+			
+			String post = null;
+			if(ScoredChangeSolver.USE_COLUMNS && ScoredChangeSolver.USE_ROWS)
+				post = "both";
+			else if(ScoredChangeSolver.USE_COLUMNS)
+				post = "cols";
+			else if(ScoredChangeSolver.USE_ROWS)
+				post = "rows";
+			
+			PrintStream fos = new PrintStream(new FileOutputStream(RESULTS_PATH + "/" + exp.name() + "_averages_" + post + ".txt"));
+			PrintStream fosStddev = new PrintStream(new FileOutputStream(RESULTS_PATH + "/" + exp.name() + "_stddevs_" + post + ".txt"));
 			PrintStream temp = System.out;
 			System.setOut(fos); //this is a hack because I, for some reason, made the print table function go to sysout
 			Utility.printTable(columnHeaders, rowHeaders, data, false);
