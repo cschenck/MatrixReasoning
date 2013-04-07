@@ -153,15 +153,15 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 	}
 	
 
-	private Map<Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>>, List<ComparisonFunction>> cache = 
-			new ConcurrentHashMap<Tuple<List<ComparisonFunction>,Tuple<Integer,Integer>>, List<ComparisonFunction>>(8);
+//	private Map<Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>>, List<ComparisonFunction>> cache = 
+//			new ConcurrentHashMap<Tuple<List<ComparisonFunction>,Tuple<Integer,Integer>>, List<ComparisonFunction>>(8);
 	private List<ComparisonFunction> prune(int testFold, List<ComparisonFunction> comparators, int numChoices)
 	{		
-		Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>> key = 
-				new Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>>(
-						comparators, new Tuple<Integer, Integer>(testFold, numChoices));
-		if(cache.containsKey(key))
-			return cache.get(key);
+//		Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>> key = 
+//				new Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>>(
+//						comparators, new Tuple<Integer, Integer>(testFold, numChoices));
+//		if(cache.containsKey(key))
+//			return cache.get(key);
 		
 		Map<List<ComparisonFunction>, Double> bestSetPerformance = new HashMap<List<ComparisonFunction>, Double>();
 		List<ComparisonFunction> bestSet = new ArrayList<ComparisonFunction>(comparators);
@@ -202,21 +202,21 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 			bestSetPerformance.put(bestSoFar, bestPerformanceSoFar);
 			bestSet = bestSoFar;
 			
-			Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>> bestKey = 
-					new Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>>(
-							bestSet, new Tuple<Integer, Integer>(testFold, numChoices));
-			if(cache.containsKey(bestKey))
-			{
-				List<ComparisonFunction> ret = cache.get(bestKey);
-				for(List<ComparisonFunction> set : bestSetPerformance.keySet())
-				{
-					Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>> setKey = 
-							new Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>>(
-									set, new Tuple<Integer, Integer>(testFold, numChoices));
-					cache.put(setKey, ret);
-				}
-				return ret;
-			}
+//			Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>> bestKey = 
+//					new Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>>(
+//							bestSet, new Tuple<Integer, Integer>(testFold, numChoices));
+//			if(cache.containsKey(bestKey))
+//			{
+//				List<ComparisonFunction> ret = cache.get(bestKey);
+//				for(List<ComparisonFunction> set : bestSetPerformance.keySet())
+//				{
+//					Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>> setKey = 
+//							new Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>>(
+//									set, new Tuple<Integer, Integer>(testFold, numChoices));
+//					cache.put(setKey, ret);
+//				}
+//				return ret;
+//			}
 			
 		}
 		
@@ -250,13 +250,13 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 				ret.add(cf);
 		}
 		
-		for(List<ComparisonFunction> set : bestSetPerformance.keySet())
-		{
-			Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>> setKey = 
-					new Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>>(
-							set, new Tuple<Integer, Integer>(testFold, numChoices));
-			cache.put(setKey, ret);
-		}
+//		for(List<ComparisonFunction> set : bestSetPerformance.keySet())
+//		{
+//			Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>> setKey = 
+//					new Tuple<List<ComparisonFunction>, Tuple<Integer, Integer>>(
+//							set, new Tuple<Integer, Integer>(testFold, numChoices));
+//			cache.put(setKey, ret);
+//		}
 		return ret;
 	}
 

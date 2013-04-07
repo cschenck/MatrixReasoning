@@ -174,7 +174,7 @@ public class ExperimentController {
 		for(Experiment exp : expRes.keySet())
 		{
 			Map<Integer, List<RunningMean>> expMeans = new HashMap<Integer, List<RunningMean>>();
-			FileWriter fw = new FileWriter(RESULTS_PATH + "/" + exp.name() + "_dump.txt");
+//			FileWriter fw = new FileWriter(RESULTS_PATH + "/" + exp.name() + "_dump.txt");
 			for(int numCandidates = 2; numCandidates <= NUM_CHOICES; numCandidates++)
 			{
 				List<RunningMean> means = new ArrayList<RunningMean>();
@@ -184,9 +184,9 @@ public class ExperimentController {
 				for(Entry<List<Context>, Map<Integer,Tuple<Double, String>>> e : expRes.get(exp).entrySet())
 				{
 					//dump the raw results into a file
-					fw.write(e.getKey().toString() + " = " + e.getValue().get(numCandidates).a + " = " 
-							+ e.getValue().get(numCandidates).b + "\n");
-					fw.flush();
+//					fw.write(e.getKey().toString() + " = " + e.getValue().get(numCandidates).a + " = " 
+//							+ e.getValue().get(numCandidates).b + "\n");
+//					fw.flush();
 					
 					//aggregate the results as well
 					means.get(e.getKey().size() - 1).addValue(e.getValue().get(numCandidates).a);
@@ -194,7 +194,7 @@ public class ExperimentController {
 				expMeans.put(numCandidates, means);
 			}
 			
-			fw.close();
+//			fw.close();
 		
 		
 			//now lets save the means to a file
