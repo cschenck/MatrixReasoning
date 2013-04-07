@@ -140,7 +140,7 @@ public class MultiJobRunner<J,R> {
 			}
 		});
 		
-		MultiThreadRunner runner = new MultiThreadRunner(threads, Integer.MAX_VALUE);
+		MultiThreadRunner runner = new MultiThreadRunner(threads, Integer.MAX_VALUE, enableStatusWindow);
 		runner.startThreads();
 		
 		return results;
