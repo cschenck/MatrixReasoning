@@ -13,8 +13,8 @@ import utility.Utility;
 
 public class ScoredChangeSolver implements TaskSolver {
 	
-	private static final boolean USE_COLUMNS = false;
-	private static final boolean USE_ROWS = true;
+	private static final boolean USE_COLUMNS = true;
+	private static final boolean USE_ROWS = false;
 
 	@Override
 	public Map<MatrixEntry, Double> solveTask(MatrixCompletionTask task, int numChoices, List<ComparisonFunction> comparators) {
