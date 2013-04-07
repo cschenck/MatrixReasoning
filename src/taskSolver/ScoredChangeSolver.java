@@ -13,7 +13,7 @@ import utility.Utility;
 
 public class ScoredChangeSolver implements TaskSolver {
 	
-	private static final boolean USE_COLUMNS = false;
+	private static final boolean USE_COLUMNS = true;
 	private static final boolean USE_ROWS = true;
 
 	@Override
