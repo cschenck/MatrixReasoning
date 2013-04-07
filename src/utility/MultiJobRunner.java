@@ -124,9 +124,9 @@ public class MultiJobRunner<J,R> {
 					
 					status = time;
 					
-					System.out.print(currentSize + "/" + startSize + ", est. time remaining: " + status + "\r");
+					System.out.print(currentSize + "/" + startSize + ", est. time remaining: " + status + "                          \r");
 				}
-				System.out.println("Done");
+				System.out.println("Finishing last few jobs...                                                          ");
 			}
 			
 			@Override
@@ -142,6 +142,7 @@ public class MultiJobRunner<J,R> {
 		
 		MultiThreadRunner runner = new MultiThreadRunner(threads, Integer.MAX_VALUE, enableStatusWindow);
 		runner.startThreads();
+		System.out.println("Done");
 		
 		return results;
 	}
