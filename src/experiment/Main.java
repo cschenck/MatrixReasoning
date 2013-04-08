@@ -76,24 +76,24 @@ public class Main {
 //		ScoredChangeExpWeightedClustering exp = new ScoredChangeExpWeightedClustering(objectsFile);
 //		ScoredChangeExpTopKClustering exp = new ScoredChangeExpTopKClustering(objectsFile);
 //		ScoredChangeExpBoostedClustering exp = new ScoredChangeExpBoostedClustering(objectsFile);
-//		ScoredChangeExpGDescentClustering exp = 
-//				new ScoredChangeExpGDescentClustering(initializeObjects(objectsFile, new Random(1)), getAllContexts());
-//		System.out.println(exp.runExperiment(new ArrayList<Context>(getAllContexts()), Utility.convertToList(new Integer[]{5})));
+		ScoredChangeExpGDescentClustering exp = 
+				new ScoredChangeExpGDescentClustering(initializeObjects(objectsFile, new Random(1)), getAllContexts());
+		System.out.println(exp.runExperiment(new ArrayList<Context>(getAllContexts()), Utility.convertToList(new Integer[]{5})));
 		
 		//test rows and cols
-		ScoredChangeSolver.USE_COLUMNS = true;
-		ScoredChangeSolver.USE_ROWS = true;
-		runExperiments();
-		
-		//test rows only
-		ScoredChangeSolver.USE_COLUMNS = false;
-		ScoredChangeSolver.USE_ROWS = true;
-		runExperiments();
-		
-		//test cols only
-		ScoredChangeSolver.USE_COLUMNS = true;
-		ScoredChangeSolver.USE_ROWS = false;
-		runExperiments();
+//		ScoredChangeSolver.USE_COLUMNS = true;
+//		ScoredChangeSolver.USE_ROWS = true;
+//		runExperiments();
+//		
+//		//test rows only
+//		ScoredChangeSolver.USE_COLUMNS = false;
+//		ScoredChangeSolver.USE_ROWS = true;
+//		runExperiments();
+//		
+//		//test cols only
+//		ScoredChangeSolver.USE_COLUMNS = true;
+//		ScoredChangeSolver.USE_ROWS = false;
+//		runExperiments();
 	}
 	
 	private static void runExperiments()

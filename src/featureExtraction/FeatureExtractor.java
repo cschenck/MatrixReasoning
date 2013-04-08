@@ -115,6 +115,14 @@ public abstract class FeatureExtractor {
 		//now check to make sure each object has the correct number of executions
 		for(Entry<String, List<double[]>> e : ret.entrySet())
 		{
+			//first remove any null values
+			for(int i = 0; i < e.getValue().size();)
+			{
+				if(e.getValue().get(i) == null)
+					e.getValue().remove(i);
+				else
+					i++;
+			}
 			if(e.getValue().size() != FeatureExtractionManager.NUM_EXECUTIONS)
 				Utility.debugPrintln("Expected " + FeatureExtractionManager.NUM_EXECUTIONS + " executions for " 
 						+ e.getKey() + " in context " + c.toString() + " but found " + e.getValue().size());

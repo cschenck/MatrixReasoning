@@ -49,7 +49,7 @@ public class ColorClustering {
 		FeatureExtractionManager manager = new FeatureExtractionManager(rand);
 		
 		Set<Context> contexts = getContexts();
-		String property = "color";
+//		String property = "color";
 		//String property = "weight";
 //		String property = "contents";
 		
@@ -63,14 +63,14 @@ public class ColorClustering {
 //		clusterer.setMinNumClusters(3);
 		SpectralClusterer clusterer = new SpectralClusterer();
 		clusterer.setDistanceFunctionIsSimilarityFunction(true);
-		clusterer.setAlphaStar(0.925);
+		clusterer.setAlphaStar(0.94);
 		final Map<Context, ComparisonFunction> comps = new HashMap<Context, ComparisonFunction>();
 		for(Context c : contexts)
 		{
 			if(c.modality.equals(Modality.color))
 				comps.put(c, new DistanceComparatorLogisticsNormalization(c, DistanceFunction.Euclidean, objects, false));
 			else
-				comps.put(c, new DistanceComparatorLogisticsNormalization(c, DistanceFunction.Euclidean, objects, false));
+				comps.put(c, new DistanceComparatorLogisticsNormalization(c, DistanceFunction.Manhatten, objects, false));
 		}
 		clusterer.setDistanceFunction(new weka.core.DistanceFunction() {
 			private Instances data = null;
@@ -176,7 +176,7 @@ public class ColorClustering {
 		//audio contexts
 //		contexts.add(new Context(Behavior.crush, Modality.audio));
 //		contexts.add(new Context(Behavior.grasp, Modality.audio));
-//		contexts.add(new Context(Behavior.high_velocity_shake, Modality.audio));
+		contexts.add(new Context(Behavior.high_velocity_shake, Modality.audio));
 //		contexts.add(new Context(Behavior.hold, Modality.audio));
 //		contexts.add(new Context(Behavior.lift_slow, Modality.audio));
 //		contexts.add(new Context(Behavior.low_drop, Modality.audio));
@@ -196,7 +196,7 @@ public class ColorClustering {
 //		contexts.add(new Context(Behavior.shake, Modality.proprioception));
 //		contexts.add(new Context(Behavior.tap, Modality.proprioception));
 		//color contexts	
-		contexts.add(new Context(Behavior.look, Modality.color));
+//		contexts.add(new Context(Behavior.look, Modality.color));
 		
 		return contexts;
 	}

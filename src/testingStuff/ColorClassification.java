@@ -38,9 +38,9 @@ public class ColorClassification {
 		FeatureExtractionManager manager = new FeatureExtractionManager(rand);
 		
 		Set<Context> contexts = getContexts();
-		String property = "color";
+//		String property = "color";
 //		String property = "weight";
-//		String property = "contents";
+		String property = "contents";
 		
 		List<MatrixEntry> objects = MatrixEntry.loadMatrixEntryFile("objects.txt");
 		manager.assignFeatures(objects, contexts);
@@ -123,7 +123,7 @@ public class ColorClassification {
 		//audio contexts
 //		contexts.add(new Context(Behavior.crush, Modality.audio));
 //		contexts.add(new Context(Behavior.grasp, Modality.audio));
-//		contexts.add(new Context(Behavior.high_velocity_shake, Modality.audio));
+		contexts.add(new Context(Behavior.high_velocity_shake, Modality.audio));
 //		contexts.add(new Context(Behavior.hold, Modality.audio));
 //		contexts.add(new Context(Behavior.lift_slow, Modality.audio));
 //		contexts.add(new Context(Behavior.low_drop, Modality.audio));
@@ -143,7 +143,7 @@ public class ColorClassification {
 //		contexts.add(new Context(Behavior.shake, Modality.proprioception));
 //		contexts.add(new Context(Behavior.tap, Modality.proprioception));
 		//color contexts
-		contexts.add(new Context(Behavior.look, Modality.color));
+//		contexts.add(new Context(Behavior.look, Modality.color));
 		
 		return contexts;
 	}

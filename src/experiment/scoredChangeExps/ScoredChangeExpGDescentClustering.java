@@ -146,9 +146,12 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 		}
 		
 		Map<Integer, Tuple<Double, String>> ret = new HashMap<Integer, Tuple<Double,String>>();
+//		for(int numChoices : numCandidateObjects)
+//			ret.put(numChoices, new Tuple<Double, String>((double)1.0*correct.get(numChoices)/tasks.size(), 
+//					output.get(numChoices).toString()));
 		for(int numChoices : numCandidateObjects)
 			ret.put(numChoices, new Tuple<Double, String>((double)1.0*correct.get(numChoices)/tasks.size(), 
-					output.get(numChoices).toString()));
+					""));
 		return ret;
 	}
 	
