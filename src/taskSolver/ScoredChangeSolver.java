@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import experiment.Experiment.ROWS_COLS_VALUES;
+
 import matrices.MatrixCompletionTask;
 import matrices.MatrixEntry;
 import taskSolver.comparisonFunctions.ComparisonFunction;
@@ -13,8 +15,27 @@ import utility.Utility;
 
 public class ScoredChangeSolver implements TaskSolver {
 	
-	public static boolean USE_COLUMNS = true;
-	public static boolean USE_ROWS = true;
+	private boolean USE_COLUMNS = true;
+	private boolean USE_ROWS = true;
+	
+	public ScoredChangeSolver(ROWS_COLS_VALUES r)
+	{
+		if(r.equals(ROWS_COLS_VALUES.BOTH))
+		{
+			USE_COLUMNS = true;
+			USE_ROWS = true;
+		}
+		else if(r.equals(ROWS_COLS_VALUES.ROWS_ONLY))
+		{
+			USE_COLUMNS = false;
+			USE_ROWS = true;
+		}
+		else if(r.equals(ROWS_COLS_VALUES.COLS_ONLY))
+		{
+			USE_COLUMNS = true;
+			USE_ROWS = false;
+		}
+	}
 
 	@Override
 	public Map<MatrixEntry, Double> solveTask(MatrixCompletionTask task, int numChoices, List<ComparisonFunction> comparators) {

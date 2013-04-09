@@ -98,4 +98,9 @@ public class OneSameOneDifferentPattern implements Pattern {
 		return ret;
 	}
 
+	@Override
+	public String getPatternName() {
+		return "OneSameOneDifferent";
+	}
+
 }

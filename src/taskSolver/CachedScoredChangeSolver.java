@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import experiment.Experiment.ROWS_COLS_VALUES;
+
 import matrices.MatrixCompletionTask;
 import matrices.MatrixEntry;
 import taskSolver.comparisonFunctions.ComparisonFunction;
@@ -18,9 +20,9 @@ public class CachedScoredChangeSolver implements TaskSolver {
 	private Map<ComparisonFunction, Map<MatrixCompletionTask, Map<MatrixEntry, Double>>> cache;
 	
 	public CachedScoredChangeSolver(List<MatrixCompletionTask> tasks, 
-			Set<ComparisonFunction> functions)
+			Set<ComparisonFunction> functions, ROWS_COLS_VALUES r)
 	{
-		solver = new ScoredChangeSolver();
+		solver = new ScoredChangeSolver(r);
 		
 		Utility.debugPrintln("Computing cache for contexts");
 		this.cache = new HashMap<ComparisonFunction, Map<MatrixCompletionTask,Map<MatrixEntry,Double>>>();

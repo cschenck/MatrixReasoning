@@ -127,4 +127,9 @@ public class DifferentPattern implements Pattern {
 		return ret;
 	}
 
+	@Override
+	public String getPatternName() {
+		return "Permutation";
+	}
+
 }

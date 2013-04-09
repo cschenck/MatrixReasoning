@@ -35,6 +35,7 @@ import utility.Modality;
 import utility.MultiThreadRunner;
 import utility.MultiThreadRunner.MultiThreadRunnable;
 import utility.Utility;
+import experiment.Experiment.ROWS_COLS_VALUES;
 import experiment.scoredChangeExps.ScoredChangeExp;
 import experiment.scoredChangeExps.ScoredChangeExpClustering;
 import experiment.scoredChangeExps.ScoredChangeExpGDescentClustering;
@@ -76,24 +77,11 @@ public class Main {
 //		ScoredChangeExpWeightedClustering exp = new ScoredChangeExpWeightedClustering(objectsFile);
 //		ScoredChangeExpTopKClustering exp = new ScoredChangeExpTopKClustering(objectsFile);
 //		ScoredChangeExpBoostedClustering exp = new ScoredChangeExpBoostedClustering(objectsFile);
-		ScoredChangeExpGDescentClustering exp = 
-				new ScoredChangeExpGDescentClustering(initializeObjects(objectsFile, new Random(1)), getAllContexts());
-		System.out.println(exp.runExperiment(new ArrayList<Context>(getAllContexts()), Utility.convertToList(new Integer[]{5})));
+//		ScoredChangeExpGDescentClustering exp = 
+//				new ScoredChangeExpGDescentClustering(initializeObjects(objectsFile, new Random(1)), getAllContexts());
+//		System.out.println(exp.runExperiment(new ArrayList<Context>(getAllContexts()), Utility.convertToList(new Integer[]{5})));
 		
-		//test rows and cols
-//		ScoredChangeSolver.USE_COLUMNS = true;
-//		ScoredChangeSolver.USE_ROWS = true;
-//		runExperiments();
-//		
-//		//test rows only
-//		ScoredChangeSolver.USE_COLUMNS = false;
-//		ScoredChangeSolver.USE_ROWS = true;
-//		runExperiments();
-//		
-//		//test cols only
-//		ScoredChangeSolver.USE_COLUMNS = true;
-//		ScoredChangeSolver.USE_ROWS = false;
-//		runExperiments();
+		runExperiments();
 	}
 	
 	private static void runExperiments()
@@ -101,9 +89,15 @@ public class Main {
 		Random rand = new Random(1);
 		List<MatrixEntry> objects = initializeObjects(objectsFile, rand);
 		List<Experiment> exps = new ArrayList<Experiment>();
-		exps.add(new ScoredChangeExp(objects, getAllContexts()));
-		exps.add(new ScoredChangeExpClustering(objects, getAllContexts()));
-		exps.add(new ScoredChangeExpGDescentClustering(objects, getAllContexts()));
+		exps.add(new ScoredChangeExp(objects, getAllContexts(), ROWS_COLS_VALUES.ROWS_ONLY));
+		exps.add(new ScoredChangeExp(objects, getAllContexts(), ROWS_COLS_VALUES.COLS_ONLY));
+		exps.add(new ScoredChangeExp(objects, getAllContexts(), ROWS_COLS_VALUES.BOTH));
+		exps.add(new ScoredChangeExpClustering(objects, getAllContexts(), ROWS_COLS_VALUES.ROWS_ONLY));
+		exps.add(new ScoredChangeExpClustering(objects, getAllContexts(), ROWS_COLS_VALUES.COLS_ONLY));
+		exps.add(new ScoredChangeExpClustering(objects, getAllContexts(), ROWS_COLS_VALUES.BOTH));
+		exps.add(new ScoredChangeExpGDescentClustering(objects, getAllContexts(), ROWS_COLS_VALUES.ROWS_ONLY));
+		exps.add(new ScoredChangeExpGDescentClustering(objects, getAllContexts(), ROWS_COLS_VALUES.COLS_ONLY));
+		exps.add(new ScoredChangeExpGDescentClustering(objects, getAllContexts(), ROWS_COLS_VALUES.BOTH));
 		
 		ExperimentController ec = new ExperimentController(exps, getAllContexts(), rand);
 		ec.runExperiments();

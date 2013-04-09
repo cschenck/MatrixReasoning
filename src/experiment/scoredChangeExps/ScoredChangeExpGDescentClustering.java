@@ -36,8 +36,14 @@ import taskSolver.comparisonFunctions.ComparisonFunction;
 import utility.Context;
 import utility.Tuple;
 import utility.Utility;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.Instance;
+import weka.core.Instances;
 import experiment.Experiment;
 import experiment.ExperimentController;
+import experiment.Experiment.ExperimentVariable;
+import experiment.Experiment.ROWS_COLS_VALUES;
 import featureExtraction.FeatureExtractionManager;
 
 public class ScoredChangeExpGDescentClustering implements Experiment {
@@ -71,10 +77,14 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 	private Set<Pattern> colPatterns = new HashSet<Pattern>();
 	private Map<Pattern, Boolean> validPatterns = new HashMap<Pattern, Boolean>();
 	
+	private ROWS_COLS_VALUES rowsCols;
+	private Map<MatrixCompletionTask, Set<String>> taskDifficulties = new HashMap<MatrixCompletionTask, Set<String>>();
+	
 	private Random rand;
 	
-	public ScoredChangeExpGDescentClustering(List<MatrixEntry> objects, Set<Context> allContexts)
+	public ScoredChangeExpGDescentClustering(List<MatrixEntry> objects, Set<Context> allContexts, ROWS_COLS_VALUES rowsCols)
 	{
+		this.rowsCols = rowsCols;
 		rand = new Random(RANDOM_SEED);
 //		System.out.println("loading objects");
 //		this.initializeObjects(objectFilepath);
@@ -89,19 +99,75 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 		System.out.println("initializing solver");
 		this.initializeSolver();
 		System.out.println("initialization complete");
+		
+		for(MatrixCompletionTask task : tasks)
+		{
+			this.taskDifficulties.put(task, new HashSet<String>());
+			this.taskDifficulties.get(task).add("Averaged");
+			Set<Pattern> patterns = getApplicablePatterns(task);
+			if(patterns.size() == 1) //special case, this means there is the same pattern on the rows and columns
+				this.taskDifficulties.get(task).add("2 patterns");
+			else
+				this.taskDifficulties.get(task).add(patterns.size() + " patterns");
+			for(Pattern p : patterns)
+			{
+				this.taskDifficulties.get(task).add(p.toString());
+				this.taskDifficulties.get(task).add(p.getRelavantProperties().toString());
+				this.taskDifficulties.get(task).add(p.getPatternName());
+			}
+		}
 	}
 	
-	public Map<Integer, Tuple<Double, String>> runExperiment(List<Context> contexts, List<Integer> numCandidateObjects)
+	private Set<Pattern> getApplicablePatterns(MatrixCompletionTask task)
 	{
-		Map<Integer, List<String>> output = new HashMap<Integer, List<String>>();
-		Map<Integer, Integer> correct = new HashMap<Integer, Integer>();
+		Set<Pattern> ret = new HashSet<Pattern>();
+		
+		List<List<MatrixEntry>> rows = new ArrayList<List<MatrixEntry>>();
+		for(int i = 0; i < task.getNumRows() - 1; i++)
+			rows.add(task.getRow(i));
+		
+		for(Pattern p : rowPatterns)
+		{
+			boolean predicate = true;
+			for(List<MatrixEntry> row : rows)
+			{
+				if(!p.detectPattern(row))
+					predicate = false;
+			}
+			if(predicate && !ret.contains(p))
+				ret.add(p);
+		}
+		
+		//put the matrix into col format
+		List<List<MatrixEntry>> cols = new ArrayList<List<MatrixEntry>>();
+		for(int i = 0; i < task.getNumCols() - 1; i++)
+			cols.add(task.getCol(i));
+		
+		for(Pattern p : colPatterns)
+		{
+			boolean predicate = true;
+			for(List<MatrixEntry> col : cols)
+			{
+				if(!p.detectPattern(col))
+					predicate = false;
+			}
+			if(predicate && !ret.contains(p))
+				ret.add(p);
+		}
+
+		return ret;
+	}
+	
+	public Instances runExperiment(List<Context> contexts, List<Integer> numCandidateObjects, 
+			Map<ExperimentVariable, Attribute> attributes, ArrayList<Attribute> attributeList)
+	{
+		Map<Integer, Map<String, Integer>> correct = new HashMap<Integer, Map<String, Integer>>();
+		Map<Integer, Map<String, Integer>> total = new HashMap<Integer, Map<String, Integer>>();
 		
 		for(int i : numCandidateObjects)
 		{
-			correct.put(i, 0);
-			output.put(i, new ArrayList<String>());
-			for(int j = 0; j < tasks.size(); j++)
-				output.get(i).add("");
+			correct.put(i, new HashMap<String, Integer>());
+			total.put(i, new HashMap<String, Integer>());
 		}
 		
 		List<ComparisonFunction> comparators = new ArrayList<ComparisonFunction>();
@@ -131,27 +197,40 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 							max = obj;
 					}
 					
-					if(task.isCorrect(max))
-						correct.put(numChoices, correct.get(numChoices) + 1);
-					
-					String out = "<";
-					if(!task.isCorrect(max))
-						out += "INCORRECT,";
-					else
-						out += "CORRECT,";
-					out += max.getName() + ">";
-					output.get(numChoices).set(i, out);
+					for(String p : this.taskDifficulties.get(task))
+					{
+						if(total.get(numChoices).get(p) == null)
+						{
+							total.get(numChoices).put(p, 0);
+							correct.get(numChoices).put(p, 0);
+						}
+						if(task.isCorrect(max))
+							correct.get(numChoices).put(p, correct.get(numChoices).get(p) + 1);
+						total.get(numChoices).put(p, total.get(numChoices).get(p) + 1);
+					}
 				}
 			}
 		}
 		
-		Map<Integer, Tuple<Double, String>> ret = new HashMap<Integer, Tuple<Double,String>>();
-//		for(int numChoices : numCandidateObjects)
-//			ret.put(numChoices, new Tuple<Double, String>((double)1.0*correct.get(numChoices)/tasks.size(), 
-//					output.get(numChoices).toString()));
-		for(int numChoices : numCandidateObjects)
-			ret.put(numChoices, new Tuple<Double, String>((double)1.0*correct.get(numChoices)/tasks.size(), 
-					""));
+		Instances ret = new Instances("ret", attributeList, 1);
+		for(Integer numChoices : total.keySet())
+		{
+			for(String p : total.get(numChoices).keySet())
+			{
+				Instance point = new DenseInstance(attributeList.size());
+				point.setValue(attributes.get(ExperimentVariable.ROWS_COLS), rowsCols.toString());
+				point.setValue(attributes.get(ExperimentVariable.FUNCTION), this.name());
+				point.setValue(attributes.get(ExperimentVariable.NUM_CANDIDATES), numChoices);
+				point.setValue(attributes.get(ExperimentVariable.NUM_CONTEXTS), contexts.size());
+				point.setValue(attributes.get(ExperimentVariable.DIFFICULTY_TYPE), p);
+				point.setValue(attributes.get(ExperimentVariable.ACCURACY), 
+						(double)1.0*correct.get(numChoices).get(p)/total.get(numChoices).get(p));
+				point.setValue(attributes.get(ExperimentVariable.STD_DEV), 0);
+				point.setDataset(ret);
+				ret.add(point);
+			}
+		}
+		
 		return ret;
 	}
 	
@@ -362,7 +441,7 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 	private void initializeSolver()
 	{
 //		solver = new ScoredChangeSolver();
-		solver = new CachedScoredChangeSolver(tasks, new HashSet<ComparisonFunction>(allComparators.values()));
+		solver = new CachedScoredChangeSolver(tasks, new HashSet<ComparisonFunction>(allComparators.values()), rowsCols);
 	}
 	
 	private void initializeComparators()
@@ -486,7 +565,18 @@ public class ScoredChangeExpGDescentClustering implements Experiment {
 
 	@Override
 	public String name() {
-		return "ClusterDiffGAscent";
+		return "Pruning";
+	}
+	
+	@Override
+	public Set<Pattern> getValidPatterns() {
+		Set<Pattern> ret = new HashSet<Pattern>();
+		for(Pattern p : validPatterns.keySet())
+		{
+			if(validPatterns.get(p).booleanValue())
+				ret.add(p);
+		}
+		return ret;
 	}
 
 }

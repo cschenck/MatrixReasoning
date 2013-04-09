@@ -23,5 +23,7 @@ public interface Pattern {
 	 */
 	public Set<String> getRelavantProperties();
 	
+	public String getPatternName();
+	
 
 }

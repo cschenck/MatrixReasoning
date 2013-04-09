@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
@@ -28,15 +27,15 @@ import matrices.patterns.SamePattern;
 import matrices.patterns.XORMetaPattern;
 import taskSolver.ScoredChangeSolver;
 import taskSolver.TaskSolver;
-import taskSolver.comparisonFunctions.CheatingComparator;
 import taskSolver.comparisonFunctions.ClusterDiffComparator;
 import taskSolver.comparisonFunctions.ComparisonFunction;
 import taskSolver.comparisonFunctions.DistanceComparator.DistanceFunction;
 import taskSolver.comparisonFunctions.DistanceComparatorLogisticsNormalization;
-import utility.Behavior;
 import utility.Context;
-import utility.Modality;
-import utility.Tuple;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.Instance;
+import weka.core.Instances;
 import experiment.Experiment;
 import featureExtraction.FeatureExtractionManager;
 
@@ -71,10 +70,14 @@ public class ScoredChangeExpClustering implements Experiment {
 	private Set<Pattern> colPatterns = new HashSet<Pattern>();
 	private Map<Pattern, Boolean> validPatterns = new HashMap<Pattern, Boolean>();
 	
+	private ROWS_COLS_VALUES rowsCols;
+	private Map<MatrixCompletionTask, Set<String>> taskDifficulties = new HashMap<MatrixCompletionTask, Set<String>>();
+	
 	private Random rand;
 	
-	public ScoredChangeExpClustering(List<MatrixEntry> objects, Set<Context> allContexts)
+	public ScoredChangeExpClustering(List<MatrixEntry> objects, Set<Context> allContexts, ROWS_COLS_VALUES rowsCols)
 	{
+		this.rowsCols = rowsCols;
 		rand = new Random(RANDOM_SEED);
 //		System.out.println("loading objects");
 //		this.initializeObjects(objectFilepath);
@@ -89,18 +92,75 @@ public class ScoredChangeExpClustering implements Experiment {
 		System.out.println("initializing solver");
 		this.initializeSolver();
 		System.out.println("initialization complete");
+		
+		for(MatrixCompletionTask task : tasks)
+		{
+			this.taskDifficulties.put(task, new HashSet<String>());
+			this.taskDifficulties.get(task).add("Averaged");
+			Set<Pattern> patterns = getApplicablePatterns(task);
+			if(patterns.size() == 1) //special case, this means there is the same pattern on the rows and columns
+				this.taskDifficulties.get(task).add("2 patterns");
+			else
+				this.taskDifficulties.get(task).add(patterns.size() + " patterns");
+			for(Pattern p : patterns)
+			{
+				this.taskDifficulties.get(task).add(p.toString());
+				this.taskDifficulties.get(task).add(p.getRelavantProperties().toString());
+				this.taskDifficulties.get(task).add(p.getPatternName());
+			}
+		}
 	}
 	
-	public Map<Integer, Tuple<Double, String>> runExperiment(List<Context> contexts, List<Integer> numCandidateObjects)
+	private Set<Pattern> getApplicablePatterns(MatrixCompletionTask task)
 	{
-		Map<Integer, StringBuilder> output = new HashMap<Integer, StringBuilder>();
-		Map<Integer, Integer> correct = new HashMap<Integer, Integer>();
-		int total = 0;
+		Set<Pattern> ret = new HashSet<Pattern>();
+		
+		List<List<MatrixEntry>> rows = new ArrayList<List<MatrixEntry>>();
+		for(int i = 0; i < task.getNumRows() - 1; i++)
+			rows.add(task.getRow(i));
+		
+		for(Pattern p : rowPatterns)
+		{
+			boolean predicate = true;
+			for(List<MatrixEntry> row : rows)
+			{
+				if(!p.detectPattern(row))
+					predicate = false;
+			}
+			if(predicate && !ret.contains(p))
+				ret.add(p);
+		}
+		
+		//put the matrix into col format
+		List<List<MatrixEntry>> cols = new ArrayList<List<MatrixEntry>>();
+		for(int i = 0; i < task.getNumCols() - 1; i++)
+			cols.add(task.getCol(i));
+		
+		for(Pattern p : colPatterns)
+		{
+			boolean predicate = true;
+			for(List<MatrixEntry> col : cols)
+			{
+				if(!p.detectPattern(col))
+					predicate = false;
+			}
+			if(predicate && !ret.contains(p))
+				ret.add(p);
+		}
+
+		return ret;
+	}
+	
+	public Instances runExperiment(List<Context> contexts, List<Integer> numCandidateObjects, 
+			Map<ExperimentVariable, Attribute> attributes, ArrayList<Attribute> attributeList)
+	{
+		Map<Integer, Map<String, Integer>> correct = new HashMap<Integer, Map<String, Integer>>();
+		Map<Integer, Map<String, Integer>> total = new HashMap<Integer, Map<String, Integer>>();
 		
 		for(int i : numCandidateObjects)
 		{
-			output.put(i, new StringBuilder(""));
-			correct.put(i, 0);
+			correct.put(i, new HashMap<String, Integer>());
+			total.put(i, new HashMap<String, Integer>());
 		}
 		
 		List<ComparisonFunction> comparators = new ArrayList<ComparisonFunction>();
@@ -111,7 +171,6 @@ public class ScoredChangeExpClustering implements Experiment {
 		{
 			Map<MatrixEntry, Double> results = solver.solveTask(task, task.getMaxNumChoices(), comparators);
 			
-			total++;
 			for(int numChoices : numCandidateObjects)
 			{
 				MatrixEntry max = null;
@@ -121,22 +180,39 @@ public class ScoredChangeExpClustering implements Experiment {
 						max = obj;
 				}
 				
-				if(task.isCorrect(max))
-					correct.put(numChoices, correct.get(numChoices) + 1);
-				
-				StringBuilder out = output.get(numChoices);
-				out.append("<");
-				if(!task.isCorrect(max))
-					out.append("INCORRECT,");
-				else
-					out.append("CORRECT,");
-				out.append(max.getName() + ">,");
+				for(String p : this.taskDifficulties.get(task))
+				{
+					if(total.get(numChoices).get(p) == null)
+					{
+						total.get(numChoices).put(p, 0);
+						correct.get(numChoices).put(p, 0);
+					}
+					if(task.isCorrect(max))
+						correct.get(numChoices).put(p, correct.get(numChoices).get(p) + 1);
+					total.get(numChoices).put(p, total.get(numChoices).get(p) + 1);
+				}
 			}
 		}
 		
-		Map<Integer, Tuple<Double, String>> ret = new HashMap<Integer, Tuple<Double,String>>();
-		for(int numChoices : numCandidateObjects)
-			ret.put(numChoices, new Tuple<Double, String>((double)1.0*correct.get(numChoices)/total, output.get(numChoices).toString()));
+		Instances ret = new Instances("ret", attributeList, 1);
+		for(Integer numChoices : total.keySet())
+		{
+			for(String p : total.get(numChoices).keySet())
+			{
+				Instance point = new DenseInstance(attributeList.size());
+				point.setValue(attributes.get(ExperimentVariable.ROWS_COLS), rowsCols.toString());
+				point.setValue(attributes.get(ExperimentVariable.FUNCTION), this.name());
+				point.setValue(attributes.get(ExperimentVariable.NUM_CANDIDATES), numChoices);
+				point.setValue(attributes.get(ExperimentVariable.NUM_CONTEXTS), contexts.size());
+				point.setValue(attributes.get(ExperimentVariable.DIFFICULTY_TYPE), p);
+				point.setValue(attributes.get(ExperimentVariable.ACCURACY), 
+						(double)1.0*correct.get(numChoices).get(p)/total.get(numChoices).get(p));
+				point.setValue(attributes.get(ExperimentVariable.STD_DEV), 0);
+				point.setDataset(ret);
+				ret.add(point);
+			}
+		}
+		
 		return ret;
 	}
 	
@@ -162,18 +238,18 @@ public class ScoredChangeExpClustering implements Experiment {
 //		contexts.add(new Context(Behavior.high_velocity_shake, Modality.audio));
 //		contexts.add(new Context(Behavior.hold, Modality.audio));
 //		contexts.add(new Context(Behavior.lift_slow, Modality.audio));
-////		contexts.add(new Context(Behavior.low_drop, Modality.audio));
+//		contexts.add(new Context(Behavior.low_drop, Modality.audio));
 //		contexts.add(new Context(Behavior.poke, Modality.audio));
 //		contexts.add(new Context(Behavior.push, Modality.audio));
 //		contexts.add(new Context(Behavior.shake, Modality.audio));
 //		contexts.add(new Context(Behavior.tap, Modality.audio));
 //		//proprioception contexts
 //		contexts.add(new Context(Behavior.crush, Modality.proprioception));
-////		contexts.add(new Context(Behavior.grasp, Modality.proprioception));
+//		contexts.add(new Context(Behavior.grasp, Modality.proprioception));
 //		contexts.add(new Context(Behavior.high_velocity_shake, Modality.proprioception));
 //		contexts.add(new Context(Behavior.hold, Modality.proprioception));
 //		contexts.add(new Context(Behavior.lift_slow, Modality.proprioception));
-////		contexts.add(new Context(Behavior.low_drop, Modality.proprioception));
+//		contexts.add(new Context(Behavior.low_drop, Modality.proprioception));
 //		contexts.add(new Context(Behavior.poke, Modality.proprioception));
 //		contexts.add(new Context(Behavior.push, Modality.proprioception));
 //		contexts.add(new Context(Behavior.shake, Modality.proprioception));
@@ -188,13 +264,13 @@ public class ScoredChangeExpClustering implements Experiment {
 
 	private void initializeSolver()
 	{
-		solver = new ScoredChangeSolver();
+		solver = new ScoredChangeSolver(rowsCols);
 	}
 	
 	private void initializeComparators()
 	{
 		allComparators = new HashMap<Context, ComparisonFunction>();
-		
+
 		 /*
 		//cheating comparators for testing purposes
 		comparators.add(new CheatingComparator("weight", ORDERED_PROPERTIES.get("weight")));
@@ -202,9 +278,9 @@ public class ScoredChangeExpClustering implements Experiment {
 		comparators.add(new CheatingComparator("contents"));
 		
 		/*/
-		
+
 		//distance function comparators
-		
+
 		for(Context c : getAllContexts())
 		{
 //			if(c.modality.equals(Modality.color))
@@ -216,8 +292,6 @@ public class ScoredChangeExpClustering implements Experiment {
 			temp.add(c);
 			allComparators.put(c, new ClusterDiffComparator(objects, temp));
 		}
-		
-		// */
 	}
 	
 	private void initializeTasks()
@@ -329,7 +403,18 @@ public class ScoredChangeExpClustering implements Experiment {
 
 	@Override
 	public String name() {
-		return "ClusteringDiff";
+		return "ClusterDiff";
+	}
+
+	@Override
+	public Set<Pattern> getValidPatterns() {
+		Set<Pattern> ret = new HashSet<Pattern>();
+		for(Pattern p : validPatterns.keySet())
+		{
+			if(validPatterns.get(p).booleanValue())
+				ret.add(p);
+		}
+		return ret;
 	}
 
 }

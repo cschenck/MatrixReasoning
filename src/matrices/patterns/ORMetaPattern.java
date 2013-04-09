@@ -28,4 +28,9 @@ public class ORMetaPattern implements Pattern {
 		return ret;
 	}
 
+	@Override
+	public String getPatternName() {
+		return "(" + p1.getPatternName() + " OR " + p2.getPatternName() + ")";
+	}
+
 }

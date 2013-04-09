@@ -28,4 +28,9 @@ public class XORMetaPattern implements Pattern {
 		return ret;
 	}
 
+	@Override
+	public String getPatternName() {
+		return "(" + p1.getPatternName() + " XOR " + p2.getPatternName() + ")"; 
+	}
+
 }

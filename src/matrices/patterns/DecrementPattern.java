@@ -51,4 +51,9 @@ public class DecrementPattern implements Pattern {
 		return ret;
 	}
 
+	@Override
+	public String getPatternName() {
+		return "Decrement";
+	}
+
 }
