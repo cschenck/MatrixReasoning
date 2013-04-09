@@ -1,9 +1,8 @@
 package experiment;
 
-import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -15,13 +14,13 @@ import java.util.Random;
 import java.util.Set;
 
 import matrices.patterns.Pattern;
-import taskSolver.ScoredChangeSolver;
 import utility.Context;
 import utility.MultiJobRunner;
 import utility.RunningMean;
-import utility.Tuple;
 import utility.Utility;
 import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.Instance;
 import weka.core.Instances;
 import experiment.Experiment.ExperimentVariable;
 import experiment.Experiment.ROWS_COLS_VALUES;
@@ -218,98 +217,198 @@ public class ExperimentController {
 		System.out.println("Took " + time);
 	}
 	
-	private void aggregateResults() throws IOException
+	private void aggregateResults() throws FileNotFoundException, IOException
 	{
-		Instances data = new Instances("results", attributeList, 1);
+		Instances allData = new Instances("results", attributeList, 1);
 		for(Instances ints : results.values())
-			data.addAll(ints);
+			allData.addAll(ints);
 		
-		FileWriter fw = new FileWriter(RESULTS_PATH + "/results.txt");
-		fw.write(data.toString());
+		Map<HashArray, RunningMean> means = new HashMap<HashArray, RunningMean>();
+		int count = 0;
+		System.out.println("Beginning aggregation");
+		for(Instance inst : allData)
+		{
+			double[] dd = inst.toDoubleArray();
+			HashArray ha = new HashArray(dd, dd.length - 2); //don't use the last two values
+			if(means.get(ha) == null)
+				means.put(ha, new RunningMean());
+			means.get(ha).addValue(dd[dd.length - 2]);
+			count++;
+			if(count % 100000 == 0)
+				System.out.println(count + " data points aggregated");
+		}
+		
+		System.out.println("Aggregating results");
+		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
+		for(int i = 0; i < allData.numAttributes(); i++)
+			attributes.add(allData.attribute(i));
+		Instances aggregate = new Instances("aggregateResults", attributes, means.size());
+		
+		Map<Integer, Integer> counts = new HashMap<Integer, Integer>();
+		int maxCount = 0;
+		for(Entry<HashArray, RunningMean> e : means.entrySet())
+		{
+			Instance inst = new DenseInstance(attributes.size());
+			inst.setDataset(aggregate);
+			for(int i = 0; i < e.getKey().array.length; i++)
+			{
+				if(attributes.get(i).isNumeric())
+					inst.setValue(attributes.get(i), e.getKey().array[i]);
+				else
+					inst.setValue(attributes.get(i), attributes.get(i).value((int) e.getKey().array[i]));
+			}
+			inst.setValue(attributes.get(attributes.size() - 2), e.getValue().getMean());
+			inst.setValue(attributes.get(attributes.size() - 1), e.getValue().getStandardDeviation());
+			aggregate.add(inst);
+			if(counts.get(e.getValue().getN()) == null)
+				counts.put(e.getValue().getN(), 1);
+			else
+				counts.put(e.getValue().getN(), counts.get(e.getValue().getN()) + 1);
+			if(e.getValue().getN() > maxCount)
+				maxCount = e.getValue().getN();
+		}
+		
+		FileWriter fw = new FileWriter(RESULTS_PATH + "/aggregateResults.txt");
+		fw.write(aggregate.toString());
 		fw.flush();
 		fw.close();
-		
-//		//first divide up the results by experiment
-//		Map<Experiment, Map<List<Context>, Map<Integer, Tuple<Double, String>>>> expRes = 
-//				new HashMap<Experiment, Map<List<Context>,Map<Integer,Tuple<Double,String>>>>();
-//		for(Entry<Job, Map<Integer,Tuple<Double, String>>> e : results.entrySet())
-//		{
-//			if(expRes.get(e.getKey().exp) == null)
-//				expRes.put(e.getKey().exp, new HashMap<List<Context>, Map<Integer,Tuple<Double,String>>>());
-//			expRes.get(e.getKey().exp).put(e.getKey().list, e.getValue());
-//		}
-//		
-//		//now go over each experiment and save the results to a file
-//		for(Experiment exp : expRes.keySet())
-//		{
-//			Map<Integer, List<RunningMean>> expMeans = new HashMap<Integer, List<RunningMean>>();
-////			FileWriter fw = new FileWriter(RESULTS_PATH + "/" + exp.name() + "_dump.txt");
-//			for(int numCandidates = 2; numCandidates <= NUM_CHOICES; numCandidates++)
-//			{
-//				List<RunningMean> means = new ArrayList<RunningMean>();
-//				for(int i = 1; i <= getContexts().size(); i++)
-//					means.add(new RunningMean());
-//				
-//				for(Entry<List<Context>, Map<Integer,Tuple<Double, String>>> e : expRes.get(exp).entrySet())
-//				{
-//					//dump the raw results into a file
-////					fw.write(e.getKey().toString() + " = " + e.getValue().get(numCandidates).a + " = " 
-////							+ e.getValue().get(numCandidates).b + "\n");
-////					fw.flush();
-//					
-//					//aggregate the results as well
-//					means.get(e.getKey().size() - 1).addValue(e.getValue().get(numCandidates).a);
-//				}
-//				expMeans.put(numCandidates, means);
-//			}
-//			
-////			fw.close();
-//		
-//		
-//			//now lets save the means to a file
-//			List<String> rowHeaders = new ArrayList<String>();
-//			List<String> columnHeaders = new ArrayList<String>();
-//			for(Integer num : expMeans.keySet())
-//				columnHeaders.add(num.toString());
-//			for(int i = 1; i <= getContexts().size(); i++)
-//				rowHeaders.add(i + "");
-//			
-//			double[][] data = new double[getContexts().size()][expMeans.keySet().size()];
-//			double[][] dataStddev = new double[getContexts().size()][expMeans.keySet().size()];
-//			for(int i = 0; i < getContexts().size(); i++)
-//			{
-//				for(int j = 0; j < expMeans.keySet().size(); j++)
-//				{
-//					data[i][j] = expMeans.get(j + 2).get(i).getMean();
-//					dataStddev[i][j] = expMeans.get(j + 2).get(i).getStandardDeviation();
-//				}
-//			}
-//			
-//			String post = null;
-//			if(ScoredChangeSolver.USE_COLUMNS && ScoredChangeSolver.USE_ROWS)
-//				post = "both";
-//			else if(ScoredChangeSolver.USE_COLUMNS)
-//				post = "cols";
-//			else if(ScoredChangeSolver.USE_ROWS)
-//				post = "rows";
-//			
-//			PrintStream fos = new PrintStream(new FileOutputStream(RESULTS_PATH + "/" + exp.name() + "_averages_" + post + ".txt"));
-//			PrintStream fosStddev = new PrintStream(new FileOutputStream(RESULTS_PATH + "/" + exp.name() + "_stddevs_" + post + ".txt"));
-//			PrintStream temp = System.out;
-//			System.setOut(fos); //this is a hack because I, for some reason, made the print table function go to sysout
-//			Utility.printTable(columnHeaders, rowHeaders, data, false);
-//			System.setOut(fosStddev);
-//			Utility.printTable(columnHeaders, rowHeaders, dataStddev, false);
-//			fos.close();
-//			fosStddev.close();
-//			System.setOut(temp);
-//			
-//			//now we'll also print it out to standard out
-//			System.out.println("=============================" + exp.name() + "===============================");
-//			Utility.printTable(columnHeaders, rowHeaders, data, false);
-//			System.out.println();
-//		}
 	}
+	
+	private static class HashArray
+	{
+		public final double[] array;
+		
+		public HashArray(double[] d, int length)
+		{
+			double[] temp = new double[length];
+			System.arraycopy(d, 0, temp, 0, length);
+			array = temp;
+		}
+		
+		@Override
+		public boolean equals(Object obj)
+		{
+			if(!(obj instanceof HashArray))
+				return false;
+			HashArray ha = (HashArray) obj;
+			
+			if(ha.array.length != this.array.length)
+				return false;
+			
+			for(int i = 0; i < this.array.length; i++)
+			{
+				if(ha.array[i] != this.array[i])
+					return false;
+			}
+			
+			return true;
+		}
+		
+		@Override
+		public int hashCode()
+		{
+			double ret = 1;
+			for(double d : array)
+				ret += d;
+			return (int) ret;
+		}
+	}
+	
+//	private void aggregateResults() throws IOException
+//	{
+//		Instances data = new Instances("results", attributeList, 1);
+//		for(Instances ints : results.values())
+//			data.addAll(ints);
+//		
+//		
+//		
+//		
+//		FileWriter fw = new FileWriter(RESULTS_PATH + "/results.txt");
+//		fw.write(data.toString());
+//		fw.flush();
+//		fw.close();
+//		
+////		//first divide up the results by experiment
+////		Map<Experiment, Map<List<Context>, Map<Integer, Tuple<Double, String>>>> expRes = 
+////				new HashMap<Experiment, Map<List<Context>,Map<Integer,Tuple<Double,String>>>>();
+////		for(Entry<Job, Map<Integer,Tuple<Double, String>>> e : results.entrySet())
+////		{
+////			if(expRes.get(e.getKey().exp) == null)
+////				expRes.put(e.getKey().exp, new HashMap<List<Context>, Map<Integer,Tuple<Double,String>>>());
+////			expRes.get(e.getKey().exp).put(e.getKey().list, e.getValue());
+////		}
+////		
+////		//now go over each experiment and save the results to a file
+////		for(Experiment exp : expRes.keySet())
+////		{
+////			Map<Integer, List<RunningMean>> expMeans = new HashMap<Integer, List<RunningMean>>();
+//////			FileWriter fw = new FileWriter(RESULTS_PATH + "/" + exp.name() + "_dump.txt");
+////			for(int numCandidates = 2; numCandidates <= NUM_CHOICES; numCandidates++)
+////			{
+////				List<RunningMean> means = new ArrayList<RunningMean>();
+////				for(int i = 1; i <= getContexts().size(); i++)
+////					means.add(new RunningMean());
+////				
+////				for(Entry<List<Context>, Map<Integer,Tuple<Double, String>>> e : expRes.get(exp).entrySet())
+////				{
+////					//dump the raw results into a file
+//////					fw.write(e.getKey().toString() + " = " + e.getValue().get(numCandidates).a + " = " 
+//////							+ e.getValue().get(numCandidates).b + "\n");
+//////					fw.flush();
+////					
+////					//aggregate the results as well
+////					means.get(e.getKey().size() - 1).addValue(e.getValue().get(numCandidates).a);
+////				}
+////				expMeans.put(numCandidates, means);
+////			}
+////			
+//////			fw.close();
+////		
+////		
+////			//now lets save the means to a file
+////			List<String> rowHeaders = new ArrayList<String>();
+////			List<String> columnHeaders = new ArrayList<String>();
+////			for(Integer num : expMeans.keySet())
+////				columnHeaders.add(num.toString());
+////			for(int i = 1; i <= getContexts().size(); i++)
+////				rowHeaders.add(i + "");
+////			
+////			double[][] data = new double[getContexts().size()][expMeans.keySet().size()];
+////			double[][] dataStddev = new double[getContexts().size()][expMeans.keySet().size()];
+////			for(int i = 0; i < getContexts().size(); i++)
+////			{
+////				for(int j = 0; j < expMeans.keySet().size(); j++)
+////				{
+////					data[i][j] = expMeans.get(j + 2).get(i).getMean();
+////					dataStddev[i][j] = expMeans.get(j + 2).get(i).getStandardDeviation();
+////				}
+////			}
+////			
+////			String post = null;
+////			if(ScoredChangeSolver.USE_COLUMNS && ScoredChangeSolver.USE_ROWS)
+////				post = "both";
+////			else if(ScoredChangeSolver.USE_COLUMNS)
+////				post = "cols";
+////			else if(ScoredChangeSolver.USE_ROWS)
+////				post = "rows";
+////			
+////			PrintStream fos = new PrintStream(new FileOutputStream(RESULTS_PATH + "/" + exp.name() + "_averages_" + post + ".txt"));
+////			PrintStream fosStddev = new PrintStream(new FileOutputStream(RESULTS_PATH + "/" + exp.name() + "_stddevs_" + post + ".txt"));
+////			PrintStream temp = System.out;
+////			System.setOut(fos); //this is a hack because I, for some reason, made the print table function go to sysout
+////			Utility.printTable(columnHeaders, rowHeaders, data, false);
+////			System.setOut(fosStddev);
+////			Utility.printTable(columnHeaders, rowHeaders, dataStddev, false);
+////			fos.close();
+////			fosStddev.close();
+////			System.setOut(temp);
+////			
+////			//now we'll also print it out to standard out
+////			System.out.println("=============================" + exp.name() + "===============================");
+////			Utility.printTable(columnHeaders, rowHeaders, data, false);
+////			System.out.println();
+////		}
+//	}
 
 	private void buildQueue() {
 		List<Job> toBuild = new ArrayList<Job>();
