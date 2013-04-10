@@ -92,6 +92,10 @@ public class ScoredChangeExp implements Experiment {
 		this.initializeSolver();
 		System.out.println("initialization complete");
 		
+		Set<String> relavantProperties = new HashSet<String>();
+		for(Pattern p : this.getValidPatterns())
+			relavantProperties.add("~" + p.getRelavantProperties().toString());
+		
 		for(MatrixCompletionTask task : tasks)
 		{
 			this.taskDifficulties.put(task, new HashSet<String>());
@@ -101,10 +105,12 @@ public class ScoredChangeExp implements Experiment {
 				this.taskDifficulties.get(task).add("2 patterns");
 			else
 				this.taskDifficulties.get(task).add(patterns.size() + " patterns");
+			this.taskDifficulties.get(task).addAll(relavantProperties);
 			for(Pattern p : patterns)
 			{
 				this.taskDifficulties.get(task).add(p.toString());
 				this.taskDifficulties.get(task).add(p.getRelavantProperties().toString());
+				this.taskDifficulties.get(task).remove("~" + p.getRelavantProperties().toString());
 				this.taskDifficulties.get(task).add(p.getPatternName());
 			}
 		}

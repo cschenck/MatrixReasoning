@@ -88,6 +88,11 @@ public class ExperimentController {
 				evalues.add(p.getRelavantProperties().toString());
 		}
 		for(Pattern p : exps.get(0).getValidPatterns())
+		{
+			if(!evalues.contains("~" + p.getRelavantProperties().toString()))
+				evalues.add("~" + p.getRelavantProperties().toString());
+		}
+		for(Pattern p : exps.get(0).getValidPatterns())
 			evalues.add(p.toString());
 		for(int i = 2; i <= exps.get(0).getValidPatterns().size(); i++)
 			evalues.add(i + " patterns");
