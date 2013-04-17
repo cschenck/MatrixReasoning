@@ -1,0 +1,10 @@
+Results of the example task:
+[[heavy_green_rice, medium_green_beans, light_green_beans] 
+ [ heavy_blue_rice,   medium_blue_rice,   light_blue_rice] 
+ [heavy_brown_rice, medium_brown_glass,                 ?]]
+[medium_blue_glass, heavy_brown_beans, light_green_rice, light_blue_beans, light_green_glass, heavy_brown_screws, light_brown_glass, heavy_green_screws]
+raw={light_green_rice=0.10968342555549691, light_green_glass=0.7092962720408502, heavy_brown_beans=0.010176197918624123, light_blue_beans=1.0, medium_blue_glass=0.6256275604920766, heavy_green_screws=0.0, heavy_brown_screws=0.04091825087935954, light_brown_glass=0.17990638299960943}
+clusterin={light_green_rice=1.0, light_green_glass=0.6678329994284674, heavy_brown_beans=0.18660280915145802, light_blue_beans=1.0, medium_blue_glass=0.0, heavy_green_screws=0.0, heavy_brown_screws=0.11010869607127968, light_brown_glass=0.824940908048278}
+pruning chose [[audio_high_velocity_shake], [color_look], [proprioception_high_velocity_shake]]
+pruning={light_green_rice=0.2928932188134524, light_green_glass=0.2928932188134524, heavy_brown_beans=0.2928932188134524, light_blue_beans=0.2928932188134524, medium_blue_glass=0.0, heavy_green_screws=0.0, heavy_brown_screws=0.2928932188134524, light_brown_glass=1.0}
+correct answer:light_brown_glass
