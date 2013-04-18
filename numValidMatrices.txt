@@ -5,3 +5,5 @@ matrices.MatrixGenerator$PatternAligner.generateValidMatrices:75:starting color
 matrices.MatrixGenerator$PatternAligner.generateValidMatrices:188:finished color, found 5067 valid configurations
 matrices.MatrixGenerator$PatternAligner.generateValidMatrices:75:starting contents
 matrices.MatrixGenerator$PatternAligner.generateValidMatrices:188:finished contents, found 92308 valid configurations
+
+2147000000, 7.268877503508864E-4, 5.816473499920779E-7, [24,793,511,445, 24,871,404,400]

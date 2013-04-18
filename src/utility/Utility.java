@@ -384,7 +384,32 @@ public class Utility {
 	
 	public static String doubleToStringWithCommas(double d)
 	{
-		String ds = Double.toString(d);
+		boolean negative = false;
+		if(d < 0)
+		{
+			negative = true;
+			d *= -1;
+		}
+		
+		String ds = "";
+		for(int i = 0; Math.pow(10, i) <= d; i++)
+		{
+			int digit = (int) (Math.floor(d/Math.pow(10, i)) % 10);
+			ds = digit + ds;
+		}
+		
+		double dec = d - Math.floor(d);
+		if(dec > 0)
+		{
+			ds = ds + ".";
+			while(dec > 0)
+			{
+				int t = (int) (dec*10);
+				ds += t;
+				dec = dec*10 - t;
+			}
+		}
+		
 		String ret = "";
 		int periodLocation = ds.lastIndexOf(".");
 		if(periodLocation == -1)
@@ -401,6 +426,9 @@ public class Utility {
 		for(int i = periodLocation; i < ds.length(); i++)
 			ret += ds.charAt(i);
 		
+		if(negative)
+			ret = "-" + ret;
+			
 		return ret;
 	}
 	
