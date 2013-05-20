@@ -29,6 +29,7 @@ import matrices.patterns.Pattern;
 import matrices.patterns.SamePattern;
 import matrices.patterns.XORMetaPattern;
 import taskSolver.ScoredChangeSolver;
+import testingStuff.ResultsProcessor;
 import utility.Behavior;
 import utility.Context;
 import utility.Modality;
@@ -84,7 +85,7 @@ public class Main {
 		runExperiments();
 	}
 	
-	private static void runExperiments()
+	private static void runExperiments() throws FileNotFoundException, IOException
 	{
 		Random rand = new Random(1);
 		List<MatrixEntry> objects = initializeObjects(objectsFile, rand);
@@ -101,6 +102,7 @@ public class Main {
 		
 		ExperimentController ec = new ExperimentController(exps, getAllContexts(), rand);
 		ec.runExperiments();
+		ResultsProcessor.computeTables("results/aggregateResults.txt");
 	}
 	
 	private static List<MatrixEntry> initializeObjects(String objectFilepath, Random rand)

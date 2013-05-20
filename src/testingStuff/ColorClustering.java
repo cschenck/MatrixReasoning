@@ -176,7 +176,7 @@ public class ColorClustering {
 		//audio contexts
 //		contexts.add(new Context(Behavior.crush, Modality.audio));
 //		contexts.add(new Context(Behavior.grasp, Modality.audio));
-		contexts.add(new Context(Behavior.high_velocity_shake, Modality.audio));
+//		contexts.add(new Context(Behavior.high_velocity_shake, Modality.audio));
 //		contexts.add(new Context(Behavior.hold, Modality.audio));
 //		contexts.add(new Context(Behavior.lift_slow, Modality.audio));
 //		contexts.add(new Context(Behavior.low_drop, Modality.audio));
@@ -196,7 +196,7 @@ public class ColorClustering {
 //		contexts.add(new Context(Behavior.shake, Modality.proprioception));
 //		contexts.add(new Context(Behavior.tap, Modality.proprioception));
 		//color contexts	
-//		contexts.add(new Context(Behavior.look, Modality.color));
+		contexts.add(new Context(Behavior.look, Modality.color));
 		
 		return contexts;
 	}

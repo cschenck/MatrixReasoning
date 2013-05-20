@@ -50,7 +50,15 @@ public class ROIBackgroundSubtraction extends BackgroundSubtraction {
 			}
 		}
 		
-		return applyMask(image, set);
+//		return applyMask(image, set);
+		BufferedImage ret = new BufferedImage(MAX_X - MIN_X + 1, MAX_Y - MIN_Y + 1, BufferedImage.TYPE_3BYTE_BGR);
+		for(Pixel p : set)
+		{
+			int i = p.i - MIN_X;
+			int j = p.j - MIN_Y;
+			ret.setRGB(i, j, image.getRGB(p.i, p.j));
+		}
+		return ret;
 	}
 	
 	public double getAverageRedValue(int i, int j)

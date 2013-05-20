@@ -383,7 +383,7 @@ public class ResultsProcessor {
 		}
 	}
 	
-	private static void computeTables(String filename) throws FileNotFoundException, IOException
+	public static void computeTables(String filename) throws FileNotFoundException, IOException
 	{
 		Instances data = new Instances(new FileReader(filename));
 		
@@ -424,6 +424,17 @@ public class ResultsProcessor {
 		values.put(attributes.get("NUM_CANDIDATES"), 8);
 //		values.put(attributes.get("DIFFICULTY_TYPE"), 0);
 		writeOutTable(new PrintStream(new File("results/numPatternsVcontexts.txt")), 
+				data, xAxis, 1, 21, zAxis, 18, 22, values, false, false);
+		
+		//# of patterns v. # of contexts
+		xAxis = attributes.get("NUM_CONTEXTS");
+		zAxis = attributes.get("DIFFICULTY_TYPE");
+		values = new HashMap<Attribute, Integer>();
+		values.put(attributes.get("ROWS_COLS"), 2);
+		values.put(attributes.get("FUNCTION"), 0);
+		values.put(attributes.get("NUM_CANDIDATES"), 8);
+//		values.put(attributes.get("DIFFICULTY_TYPE"), 0);
+		writeOutTable(new PrintStream(new File("results/numPatternsVcontextsRAW.txt")), 
 				data, xAxis, 1, 21, zAxis, 18, 22, values, false, false);
 		
 		//rules v. # of contexts
