@@ -403,7 +403,7 @@ public class ResultsProcessor {
 		values.put(attributes.get("NUM_CANDIDATES"), 8);
 		values.put(attributes.get("DIFFICULTY_TYPE"), 0);
 		writeOutTable(new PrintStream(new File("results/funcVcontexts.txt")), 
-				data, xAxis, 1, 21, zAxis, 0, 2, values, true, false);
+				data, xAxis, 1, 21, zAxis, 0, 3, values, false, false);
 		
 		//# of candidate objects v. # of contexts
 		xAxis = attributes.get("NUM_CONTEXTS");

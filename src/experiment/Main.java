@@ -28,7 +28,6 @@ import matrices.patterns.OneSameOneDifferentPattern;
 import matrices.patterns.Pattern;
 import matrices.patterns.SamePattern;
 import matrices.patterns.XORMetaPattern;
-import taskSolver.ScoredChangeSolver;
 import testingStuff.ResultsProcessor;
 import utility.Behavior;
 import utility.Context;
@@ -40,6 +39,7 @@ import experiment.Experiment.ROWS_COLS_VALUES;
 import experiment.scoredChangeExps.ScoredChangeExp;
 import experiment.scoredChangeExps.ScoredChangeExpClustering;
 import experiment.scoredChangeExps.ScoredChangeExpGDescentClustering;
+import experiment.scoredChangeExps.ScoredChangeExpRawPruning;
 import featureExtraction.FeatureExtractionManager;
 import featureExtraction.backgroundSubtraction.BackgroundSubtraction;
 
@@ -99,6 +99,9 @@ public class Main {
 		exps.add(new ScoredChangeExpGDescentClustering(objects, getAllContexts(), ROWS_COLS_VALUES.ROWS_ONLY));
 		exps.add(new ScoredChangeExpGDescentClustering(objects, getAllContexts(), ROWS_COLS_VALUES.COLS_ONLY));
 		exps.add(new ScoredChangeExpGDescentClustering(objects, getAllContexts(), ROWS_COLS_VALUES.BOTH));
+		exps.add(new ScoredChangeExpRawPruning(objects, getAllContexts(), ROWS_COLS_VALUES.ROWS_ONLY));
+		exps.add(new ScoredChangeExpRawPruning(objects, getAllContexts(), ROWS_COLS_VALUES.COLS_ONLY));
+		exps.add(new ScoredChangeExpRawPruning(objects, getAllContexts(), ROWS_COLS_VALUES.BOTH));
 		
 		ExperimentController ec = new ExperimentController(exps, getAllContexts(), rand);
 		ec.runExperiments();
