@@ -75,9 +75,9 @@ public class ResultsProcessor {
 	 */
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 //		aggregateResults("results/results.txt");
-		processResults("results/aggregateResults.txt");
+//		processResults("results/aggregateResults.txt");
 //		computeTables("results/aggregateResults.txt");
-//		exampleTask();
+		exampleTask();
 	}
 	
 	private static void exampleTask() throws IOException
@@ -132,13 +132,22 @@ public class ResultsProcessor {
 			}
 		}
 		
+		System.out.println("computing stuff...");
+		
 		ScoredChangeSolver solver = new ScoredChangeSolver(ROWS_COLS_VALUES.BOTH);
 		Map<Context, ComparisonFunction> allComparators = new HashMap<Context, ComparisonFunction>();
 		for(Context c : getAllContexts())
-			allComparators.put(c, new DistanceComparatorLogisticsNormalization(c, DistanceFunction.Euclidean, objects, false));
+			allComparators.put(c, new DistanceComparatorLogisticsNormalization(c, DistanceFunction.Euclidean, objects, true));
 		 
 		Map<MatrixEntry, Double> rawSolution = Utility.normalize(solver.solveTask(chosen, 8, 
 				 new ArrayList<ComparisonFunction>(allComparators.values())));
+		
+		int testFold = tasks.indexOf(chosen) % NUM_FOLDS;
+		List<ComparisonFunction> rawComparators = prune(testFold, new ArrayList<ComparisonFunction>(allComparators.values()),
+				8, rand, tasks, solver);
+		Map<MatrixEntry, Double> rawPrunedSolution = Utility.normalize(solver.solveTask(chosen, 8, rawComparators));
+		
+		System.out.println("Computing more stuff");
 		 
 		allComparators = new HashMap<Context, ComparisonFunction>();
 		for(Context c : getAllContexts())
@@ -150,7 +159,7 @@ public class ResultsProcessor {
 		Map<MatrixEntry, Double> clusterSolution = Utility.normalize(solver.solveTask(chosen, 8, 
 				 new ArrayList<ComparisonFunction>(allComparators.values())));
 		
-		int testFold = tasks.indexOf(chosen) % NUM_FOLDS;
+		
 		List<ComparisonFunction> comparators = prune(testFold, new ArrayList<ComparisonFunction>(allComparators.values()),
 				8, rand, tasks, solver);
 		Map<MatrixEntry, Double> prunedSolution = Utility.normalize(solver.solveTask(chosen, 8, comparators));
@@ -162,6 +171,8 @@ public class ResultsProcessor {
 		System.out.println("clusterin=" + clusterSolution.toString());
 		System.out.println("pruning chose " + comparators.toString());
 		System.out.println("pruning=" + prunedSolution.toString());
+		System.out.println("raw pruning chose " + rawComparators.toString());
+		System.out.println("raw pruning=" + rawPrunedSolution.toString());
 		for(MatrixEntry obj : chosen.getChoices())
 		{
 			if(chosen.isCorrect(obj))
