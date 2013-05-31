@@ -75,8 +75,8 @@ public class ResultsProcessor {
 	 */
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 //		aggregateResults("results/results.txt");
-//		processResults("results/aggregateResults.txt");
-		computeTables("results/aggregateResults.txt");
+		processResults("results/aggregateResults.txt");
+//		computeTables("results/aggregateResults.txt");
 //		exampleTask();
 	}
 	
